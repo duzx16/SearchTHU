@@ -1,4 +1,4 @@
-import os, sys, json, jieba
+import os, sys, json, jieba, subprocess
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
@@ -82,9 +82,8 @@ class DocParserHtml(DocParser):
 class DocParserPdf(DocParser):
     pass
 
-class DocParserDoc(DocParser):
+class DocParserDocx(DocParser):
     def parse(self, path):
-        print(path)
         try:
             document = Document(path)
         except:
@@ -104,6 +103,25 @@ class DocParserDoc(DocParser):
             else:
                 res["content"] += self.tokenize(para.text) + " "
 
+        return res
+
+class DocParserDoc(DocParserDocx):
+    def parse(self, path):   
+        name_old, name_new = "", ""
+        for c in path:
+            if c == " ": name_old += "\\ "
+            elif c == "(": name_old += "\\("
+            elif c == ")": name_old += "\\)"
+            else:
+                name_old += c
+                name_new += c
+        name_new += ".tmp.doc"
+        os.system("cp %s %s" % (name_old, name_new))
+        os.system("textutil -convert docx \"%s\"" % name_new)
+        os.system("rm %s" % name_new)
+        name_new += "x"
+        res = super().parse(name_new)
+        os.system("rm %s" % name_new)
         return res
 
 def search(dir, files):
@@ -130,12 +148,12 @@ print("%d files found" % sum([len(files[suffix]) for suffix in files]))
 parser = {
     "html": DocParserHtml(),
     "pdf": DocParserPdf(),
-    "doc": DocParserDoc(),
-    "docx": DocParserDoc()
+    "docx": DocParserDocx(),
+    "doc": DocParserDoc()
 }
 for suffix in files:
     # TODO
-    if not suffix in ["docx"]: continue
+    if not suffix in ["doc", "docx"]: continue
     print("Parsing .%s files..." % suffix)
     for path in tqdm(files[suffix]):
         # print(path)
