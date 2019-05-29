@@ -1,4 +1,4 @@
-import os, sys, json
+import os, sys, json, jieba
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 
@@ -8,6 +8,28 @@ class DocParser:
     
     def parse(self, path):
         return {}
+
+    def check_token(self, token):
+        is_english, is_chinese = True, True
+        for c in token:
+            if 'A' <= c <= 'Z' or 'a' <= c <= 'z':
+                type = 0
+            elif u'\u4e00' <= c <= u'\u9fff':
+                type = 1
+            else:
+                type = 2
+            if type != 0: is_english = False
+            if type != 1: is_chinese = False
+        return is_english or is_chinese
+
+    def tokenize(self, str):
+        l = list(jieba.cut_for_search(str))
+        res = []
+        for token in l:
+            if self.check_token(token):
+                res.append(token)
+        res = " ".join(res)
+        return res
 
 class DocParserHtml(DocParser):
     def __init__(self):
@@ -51,9 +73,12 @@ class DocParserHtml(DocParser):
                     "text": a.text
                 })
 
-        body = soup.find("body")
-        if body is not None:
-            res["content"] = body.text
+        content_tags = ["p", "span"]
+        res["content"] = []
+        for tag in content_tags:
+            for item in soup.find_all(tag):
+                res["content"].append(item.text)
+        res["content"] = self.tokenize(" ".join(res["content"]))
                 
         return res
 
@@ -95,7 +120,6 @@ for suffix in files:
     for path in tqdm(files[suffix]):
         # print(path)
         parsed = parser[suffix].parse(path)
-        # print(json.dumps(parsed, indent=4))
-        print(parsed)
+        # print(parsed)
         with open(path + ".json", "w") as file:
             file.write(json.dumps(parsed))
