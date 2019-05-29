@@ -16,6 +16,8 @@ python DocParser.py <directory>
 
 对每个文件输出一个json文件，保存于该文件的原目录下，文件名增加后缀`.json`
 
+
+
 > 处理结果可以考虑保存成json
 >
 > * html文件：提取出title、content、h1-h6等结构信息。同时要提取出网页上含有的链接(用来做pagerank)和对应的锚文本(用来作为搜索内容)

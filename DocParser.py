@@ -1,6 +1,7 @@
 import os, sys, json, jieba
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
+from docx import Document
 
 class DocParser:
     def __init__(self):
@@ -32,9 +33,6 @@ class DocParser:
         return res
 
 class DocParserHtml(DocParser):
-    def __init__(self):
-        pass
-
     def parse(self, path):
         charsets = ["utf-8", "gb18030", "gb2312"]
         content = None
@@ -46,7 +44,7 @@ class DocParserHtml(DocParser):
             except:
                 continue
         if content is None: 
-            print("failed to parse %s" % path)
+            print("Failed to parse %s" % path)
             return {}
 
         soup = bs(content, "html.parser")
@@ -54,15 +52,15 @@ class DocParserHtml(DocParser):
         
         title = soup.find("title")
         if title is not None:
-            res["title"] = title.text
+            res["title"] = self.tokenize(title.text)
 
         for i in range(1, 7):
             hkey = "h%d" % i
             h = soup.find_all(hkey)
             if len(h) > 0:
-                res[hkey] = []
+                res[hkey] = ""
                 for item in h:
-                    res[hkey].append(item.text)
+                    res[hkey] += self.tokenize(item.text) + " "
 
         res["links"] = []
         for a in soup.find_all("a"):
@@ -70,15 +68,14 @@ class DocParserHtml(DocParser):
             if "href" in attrs:
                 res["links"].append({
                     "href": attrs["href"],
-                    "text": a.text
+                    "text": self.tokenize(a.text)
                 })
 
         content_tags = ["p", "span"]
-        res["content"] = []
+        res["content"] = ""
         for tag in content_tags:
             for item in soup.find_all(tag):
-                res["content"].append(item.text)
-        res["content"] = self.tokenize(" ".join(res["content"]))
+                res["content"] += self.tokenize(item.text) + " "
                 
         return res
 
@@ -86,7 +83,28 @@ class DocParserPdf(DocParser):
     pass
 
 class DocParserDoc(DocParser):
-    pass
+    def parse(self, path):
+        print(path)
+        try:
+            document = Document(path)
+        except:
+            print("Failed to parse %s" % path)
+            return {}
+
+        res = {}
+        res["content"] = ""
+        for para in document.paragraphs:
+            style = para.style.name
+            if style.startswith("Heading"):
+                hkey = "h%d" % int(style.split()[1])
+                if not hkey in res: res[hkey] = ""
+                res[hkey] += self.tokenize(para.text) + " "
+            elif style == "Title":
+                res["title"] = self.tokenize(para.text)
+            else:
+                res["content"] += self.tokenize(para.text) + " "
+
+        return res
 
 def search(dir, files):
     for item in os.listdir(dir):
@@ -116,10 +134,12 @@ parser = {
     "docx": DocParserDoc()
 }
 for suffix in files:
+    # TODO
+    if not suffix in ["docx"]: continue
     print("Parsing .%s files..." % suffix)
     for path in tqdm(files[suffix]):
         # print(path)
         parsed = parser[suffix].parse(path)
-        # print(parsed)
+        # print(parsed) # TODO
         with open(path + ".json", "w") as file:
             file.write(json.dumps(parsed))
