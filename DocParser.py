@@ -32,6 +32,15 @@ class DocParser:
         res = " ".join(res)
         return res
 
+    def translate_name(self, path):
+        name_old, name_new = "", ""
+        for c in path:
+            if c in [" ", "(", ")", "&"]: name_old += "\\%s" % c
+            else:
+                name_old += c
+                name_new += c   
+        return name_old, name_new     
+
 class DocParserHtml(DocParser):
     def parse(self, path):
         charsets = ["utf-8", "gb18030", "gb2312"]
@@ -92,8 +101,13 @@ class DocParserPdf(DocParserHtml):
             print("PDFBox installed")
 
     def parse(self, path):
-        new_path = "%s.html" % path
-        os.system("java -jar tools/pdfbox.jar ExtractText -html -encoding UTF-8 %s %s &> /dev/null" % (path, new_path))
+        name_old, name_new = self.translate_name(path)
+        name_new += ".tmp.pdf"
+        os.system("cp %s %s" % (name_old, name_new))
+        print("cp %s %s" % (name_old, name_new))
+        new_path = "%s.html" % name_new
+        os.system("java -jar tools/pdfbox.jar ExtractText -html -encoding UTF-8 %s %s 1> /dev/null 2> /dev/null" % (name_new, new_path))
+        os.system("rm %s" % name_new)
         res = super().parse(new_path)
         os.system("rm %s" % new_path)
         return res
@@ -123,14 +137,7 @@ class DocParserDocx(DocParser):
 
 class DocParserDoc(DocParserDocx):
     def parse(self, path):   
-        name_old, name_new = "", ""
-        for c in path:
-            if c == " ": name_old += "\\ "
-            elif c == "(": name_old += "\\("
-            elif c == ")": name_old += "\\)"
-            else:
-                name_old += c
-                name_new += c
+        name_old, name_new = self.translate_name(path)
         name_new += ".tmp.doc"
         os.system("cp %s %s" % (name_old, name_new))
         os.system("textutil -convert docx \"%s\"" % name_new)
@@ -169,7 +176,7 @@ parser = {
 }
 for suffix in files:
     # TODO
-    # if not suffix in ["pdf"]: continue
+    if not suffix in ["pdf"]: continue
     print("Parsing .%s files..." % suffix)
     for path in tqdm(files[suffix]):
         parsed = parser[suffix].parse(path)

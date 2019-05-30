@@ -24,6 +24,14 @@ python DocParser.py <directory>
 
 对每个文件输出一个json文件，保存于该文件的原目录下，文件名增加后缀`.json`
 
+### Output Format (JSON)
+
+```
+{
+    
+}
+```
+
 
 
 > 处理结果可以考虑保存成json
