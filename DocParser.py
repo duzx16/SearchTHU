@@ -79,8 +79,24 @@ class DocParserHtml(DocParser):
                 
         return res
 
-class DocParserPdf(DocParser):
-    pass
+class DocParserPdf(DocParserHtml):
+    def __init__(self):
+        super().__init__()
+
+        if not os.path.exists("tools/pdfbox.jar"):
+            print("PDFBox not found")
+            print("Installing PDFBox...")
+            if not os.path.exists("tools"):
+                os.mkdir("tools")
+            os.system("wget https://www-eu.apache.org/dist/pdfbox/2.0.15/pdfbox-app-2.0.15.jar -O tools/pdfbox.jar")
+            print("PDFBox installed")
+
+    def parse(self, path):
+        new_path = "%s.html" % path
+        os.system("java -jar tools/pdfbox.jar ExtractText -html -encoding UTF-8 %s %s &> /dev/null" % (path, new_path))
+        res = super().parse(new_path)
+        os.system("rm %s" % new_path)
+        return res
 
 class DocParserDocx(DocParser):
     def parse(self, path):
@@ -134,7 +150,7 @@ def search(dir, files):
                 if path.endswith("." + suffix):
                     files[suffix].append(path)
                     break
-
+                    
 files = {
     "html": [],
     "pdf": [],
@@ -153,10 +169,9 @@ parser = {
 }
 for suffix in files:
     # TODO
-    if not suffix in ["doc", "docx"]: continue
+    # if not suffix in ["pdf"]: continue
     print("Parsing .%s files..." % suffix)
     for path in tqdm(files[suffix]):
-        # print(path)
         parsed = parser[suffix].parse(path)
         # print(parsed) # TODO
         with open(path + ".json", "w") as file:

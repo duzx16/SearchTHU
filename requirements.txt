@@ -2,4 +2,4 @@ beautifulsoup4
 python-docx
 tqdm
 jieba
-
+pdfminer.six

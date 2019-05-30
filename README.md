@@ -1,5 +1,13 @@
 # SearchTHU
 
+## Requirements
+
+* Python 3.5+
+
+* Java 8
+
+  ​
+
 ## 爬虫
 
 爬取清华校园网内的HTML、PDF、DOC(DOCX)文件
