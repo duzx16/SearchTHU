@@ -2,13 +2,33 @@ import os, sys, json, jieba, subprocess
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
+from multiprocessing import Pool
+
+num_cpus = 32
+
+class ProgressBar:
+    def __init__(self):
+        pass
+
+    def set_total(self, tot):
+        self.bar = tqdm(total=tot)
+    
+    def update(self):
+        self.bar.update(1)
+
+progress_bar = ProgressBar()  
 
 class DocParser:
     def __init__(self):
         pass
     
     def parse(self, path):
-        return {}
+        res = self._parse(path)
+        progress_bar.update()
+        return res
+
+    def _parse(self, path):
+        pass
 
     def check_token(self, token):
         is_english, is_chinese = True, True
@@ -35,14 +55,14 @@ class DocParser:
     def translate_name(self, path):
         name_old, name_new = "", ""
         for c in path:
-            if c in [" ", "(", ")", "&"]: name_old += "\\%s" % c
+            if c in [" ", "(", ")", "&", "’", "'"]: name_old += "\\%s" % c
             else:
                 name_old += c
                 name_new += c   
         return name_old, name_new     
 
 class DocParserHtml(DocParser):
-    def parse(self, path):
+    def _parse(self, path):
         charsets = ["utf-8", "gb18030", "gb2312"]
         content = None
         for charset in charsets:
@@ -100,20 +120,20 @@ class DocParserPdf(DocParserHtml):
             os.system("wget https://www-eu.apache.org/dist/pdfbox/2.0.15/pdfbox-app-2.0.15.jar -O tools/pdfbox.jar")
             print("PDFBox installed")
 
-    def parse(self, path):
+    def _parse(self, path):
         name_old, name_new = self.translate_name(path)
         name_new += ".tmp.pdf"
         os.system("cp %s %s" % (name_old, name_new))
-        print("cp %s %s" % (name_old, name_new))
         new_path = "%s.html" % name_new
-        os.system("java -jar tools/pdfbox.jar ExtractText -html -encoding UTF-8 %s %s 1> /dev/null 2> /dev/null" % (name_new, new_path))
+        os.system("java -jar tools/pdfbox.jar ExtractText -html -encoding UTF-8 %s %s 1> /dev/null 2> /dev/null" % (
+            name_new, new_path))
         os.system("rm %s" % name_new)
-        res = super().parse(new_path)
+        res = super()._parse(new_path)
         os.system("rm %s" % new_path)
         return res
 
 class DocParserDocx(DocParser):
-    def parse(self, path):
+    def _parse(self, path):
         try:
             document = Document(path)
         except:
@@ -135,15 +155,17 @@ class DocParserDocx(DocParser):
 
         return res
 
-class DocParserDoc(DocParserDocx):
-    def parse(self, path):   
+class DocParserDoc(DocParserPdf):
+    def _parse(self, path):   
         name_old, name_new = self.translate_name(path)
+        _name_new = name_new
         name_new += ".tmp.doc"
         os.system("cp %s %s" % (name_old, name_new))
-        os.system("textutil -convert docx \"%s\"" % name_new)
+        os.system("lowriter --convert-to pdf --outdir %s %s 1> /dev/null 2> /dev/null" % (
+            os.path.dirname(name_new), name_new))
         os.system("rm %s" % name_new)
-        name_new += "x"
-        res = super().parse(name_new)
+        name_new = _name_new + ".tmp.pdf"
+        res = super()._parse(name_new)
         os.system("rm %s" % name_new)
         return res
 
@@ -175,11 +197,12 @@ parser = {
     "doc": DocParserDoc()
 }
 for suffix in files:
-    # TODO
-    if not suffix in ["pdf"]: continue
     print("Parsing .%s files..." % suffix)
-    for path in tqdm(files[suffix]):
-        parsed = parser[suffix].parse(path)
-        # print(parsed) # TODO
+    progress_bar.set_total( (len(files[suffix]) + num_cpus - 1) // num_cpus)
+    with Pool(processes=num_cpus) as pool:
+        res = pool.map(parser[suffix].parse, files[suffix])
+    print("Writting results...")
+    for i, path in enumerate(tqdm(files[suffix])):
         with open(path + ".json", "w") as file:
-            file.write(json.dumps(parsed))
+            file.write(json.dumps(res[i]))
+    print()
