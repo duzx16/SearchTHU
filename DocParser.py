@@ -1,10 +1,12 @@
-import os, sys, json, jieba, subprocess
+import os, sys, json, subprocess, logging
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
 from multiprocessing import Pool
+from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
 
 num_cpus = 32
+setLogLevel(logging.INFO)
 
 class ProgressBar:
     def __init__(self):
@@ -20,7 +22,8 @@ progress_bar = ProgressBar()
 
 class DocParser:
     def __init__(self):
-        pass
+        self.tokenizer = JiebaTokenizer()
+        # self.tokenizer.tmp_dir= "~/.tmp"
     
     def parse(self, path):
         res = self._parse(path)
@@ -44,7 +47,7 @@ class DocParser:
         return is_english or is_chinese
 
     def tokenize(self, str):
-        l = list(jieba.cut_for_search(str))
+        l = list(self.tokenizer.cut_for_search(str))
         res = []
         for token in l:
             if self.check_token(token):
@@ -58,7 +61,7 @@ class DocParser:
             if c in [" ", "(", ")", "&", "’", "'"]: name_old += "\\%s" % c
             else:
                 name_old += c
-                name_new += c   
+                name_new += c  
         return name_old, name_new     
 
 class DocParserHtml(DocParser):
@@ -74,7 +77,7 @@ class DocParserHtml(DocParser):
                 continue
         if content is None: 
             print("Failed to parse %s" % path)
-            return {}
+            return None
 
         soup = bs(content, "html.parser")
         res = {}
@@ -138,7 +141,7 @@ class DocParserDocx(DocParser):
             document = Document(path)
         except:
             print("Failed to parse %s" % path)
-            return {}
+            return None
 
         res = {}
         res["content"] = ""
@@ -196,6 +199,7 @@ parser = {
     "docx": DocParserDocx(),
     "doc": DocParserDoc()
 }
+failed = []
 for suffix in files:
     print("Parsing .%s files..." % suffix)
     progress_bar.set_total( (len(files[suffix]) + num_cpus - 1) // num_cpus)
@@ -205,4 +209,11 @@ for suffix in files:
     for i, path in enumerate(tqdm(files[suffix])):
         with open(path + ".json", "w") as file:
             file.write(json.dumps(res[i]))
+            if res[i] is None: 
+                failed.append(path)
     print()
+print("Failed files:")
+for path in failed:
+    print(path)
+with open("failed.json", "w") as file:
+    file.write(json.dumps(failed))
