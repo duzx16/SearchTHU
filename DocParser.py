@@ -6,7 +6,6 @@ from multiprocessing import Pool
 from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
 
 num_cpus = 32
-setLogLevel(logging.INFO)
 
 class ProgressBar:
     def __init__(self):
@@ -173,6 +172,16 @@ class DocParserDoc(DocParserPdf):
         return res
 
 def search(dir, files):
+    # with open("failed.json") as file:
+    #     failed = json.loads(file.read())
+    #     for path in failed:
+    #         for suffix in files:
+    #             if path.endswith("." + suffix):
+    #                 files[suffix].append(path)
+    #                 break
+
+    # return
+
     for item in os.listdir(dir):
         path = os.path.join(dir, item)
         if os.path.isdir(path):
