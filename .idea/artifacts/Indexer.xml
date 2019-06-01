@@ -3,8 +3,8 @@
     <output-path>$PROJECT_DIR$/out/artifacts/Indexer</output-path>
     <root id="archive" name="SearchTHU.jar">
       <element id="module-output" name="SearchTHU" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/web/WEB-INF/lib/IKAnalyzer3.2.5Stable.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/web/WEB-INF/lib/lucene-core-3.5.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/backend/web/WEB-INF/lib/IKAnalyzer3.2.5Stable.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/backend/web/WEB-INF/lib/lucene-core-3.5.0.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

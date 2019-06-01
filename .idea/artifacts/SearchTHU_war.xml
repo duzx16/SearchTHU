@@ -5,8 +5,8 @@
       <element id="artifact" artifact-name="SearchTHU:war exploded" />
       <element id="directory" name="WEB-INF">
         <element id="directory" name="lib">
-          <element id="file-copy" path="$PROJECT_DIR$/web/WEB-INF/lib/IKAnalyzer3.2.5Stable.jar" />
-          <element id="file-copy" path="$PROJECT_DIR$/web/WEB-INF/lib/lucene-core-3.5.0.jar" />
+          <element id="file-copy" path="$PROJECT_DIR$/backend/web/WEB-INF/lib/IKAnalyzer3.2.5Stable.jar" />
+          <element id="file-copy" path="$PROJECT_DIR$/backend/web/WEB-INF/lib/lucene-core-3.5.0.jar" />
         </element>
       </element>
     </root>
