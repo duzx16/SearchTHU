@@ -87,15 +87,18 @@ class DocParserHtml(DocParser):
         
         title = soup.find("title")
         if title is not None:
-            res["title"] = self.tokenize(title.text)
+            res["title"] = title.text
+            res["title_seg"] = self.tokenize(title.text)
 
         for i in range(1, 7):
             hkey = "h%d" % i
+            hkey_seg = "%s_seg" % hkey
             h = soup.find_all(hkey)
             if len(h) > 0:
-                res[hkey] = ""
+                res[hkey], res[hkey_seg] = "", ""
                 for item in h:
-                    res[hkey] += self.tokenize(item.text) + " "
+                    res[hkey] += item.text + " "
+                    res[hkey_seg] += self.tokenize(item.text) + " "
 
         res["links"] = []
         for a in soup.find_all("a"):
@@ -103,14 +106,16 @@ class DocParserHtml(DocParser):
             if "href" in attrs:
                 res["links"].append({
                     "href": attrs["href"],
-                    "text": self.tokenize(a.text)
+                    "text": a.text,
+                    "text_seg": self.tokenize(a.text)
                 })
 
         content_tags = ["p", "span"]
-        res["content"] = ""
+        res["content"], res["content_seg"] = "", ""
         for tag in content_tags:
             for item in soup.find_all(tag):
-                res["content"] += self.tokenize(item.text) + " "
+                res["content"] += item.text + " "
+                res["content_seg"] += self.tokenize(item.text) + " "
                 
         return res
 
@@ -147,17 +152,22 @@ class DocParserDocx(DocParser):
             return None
 
         res = {}
-        res["content"] = ""
+        res["content"], res["content_seg"] = "", ""
         for para in document.paragraphs:
             style = para.style.name
             if style.startswith("Heading"):
                 hkey = "h%d" % int(style.split()[1])
-                if not hkey in res: res[hkey] = ""
-                res[hkey] += self.tokenize(para.text) + " "
+                hkey_seg = "%s_seg" % hkey
+                if not hkey in res: 
+                    res[hkey], res[hkey_seg] = "", ""
+                res[hkey] += para.text + " "
+                res[hkey_seg] += self.tokenize(para.text) + " "
             elif style == "Title":
-                res["title"] = self.tokenize(para.text)
+                res["title"] = para.text
+                res["title_seg"] = self.tokenize(para.text)
             else:
-                res["content"] += self.tokenize(para.text) + " "
+                res["content"] += para.text + " "
+                res["content_seg"] += self.tokenize(para.text) + " "
 
         return res
 
