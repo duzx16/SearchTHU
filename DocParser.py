@@ -1,11 +1,15 @@
-import os, sys, json, subprocess, logging
+import os, sys, json, subprocess, logging, argparse
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
 from multiprocessing import Pool
 from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
 
-num_cpus = 32
+parser = argparse.ArgumentParser()
+parser.add_argument("--num_cpus", type=int, default=32)
+parser.add_argument("--retry_failed", action="store_true")
+argv = sys.argv[1:]
+args, _ = parser.parse_known_args(argv)
 
 class ProgressBar:
     def __init__(self):
@@ -172,15 +176,15 @@ class DocParserDoc(DocParserPdf):
         return res
 
 def search(dir, files):
-    # with open("failed.json") as file:
-    #     failed = json.loads(file.read())
-    #     for path in failed:
-    #         for suffix in files:
-    #             if path.endswith("." + suffix):
-    #                 files[suffix].append(path)
-    #                 break
-
-    # return
+    if args.retry_failed:
+        with open("failed.json") as file:
+            failed = json.loads(file.read())
+            for path in failed:
+                for suffix in files:
+                    if path.endswith("." + suffix):
+                        files[suffix].append(path)
+                        break
+        return
 
     for item in os.listdir(dir):
         path = os.path.join(dir, item)
@@ -201,7 +205,8 @@ files = {
 root = sys.argv[1]
 print("Searching files...")
 search(root, files)
-print("%d files found" % sum([len(files[suffix]) for suffix in files]))
+num_files = sum([len(files[suffix]) for suffix in files])
+print("%d files found" % num_files)
 parser = {
     "html": DocParserHtml(),
     "pdf": DocParserPdf(),
@@ -211,8 +216,8 @@ parser = {
 failed = []
 for suffix in files:
     print("Parsing .%s files..." % suffix)
-    progress_bar.set_total( (len(files[suffix]) + num_cpus - 1) // num_cpus)
-    with Pool(processes=num_cpus) as pool:
+    progress_bar.set_total( (len(files[suffix]) + args.num_cpus - 1) // args.num_cpus)
+    with Pool(processes=args.num_cpus) as pool:
         res = pool.map(parser[suffix].parse, files[suffix])
     print("Writting results...")
     for i, path in enumerate(tqdm(files[suffix])):
@@ -226,3 +231,4 @@ for path in failed:
     print(path)
 with open("failed.json", "w") as file:
     file.write(json.dumps(failed))
+print("%d/%d failed" % (len(failed), num_files))

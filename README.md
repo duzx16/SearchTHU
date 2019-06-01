@@ -40,6 +40,9 @@ python DocParser.py <directory>
 }
 ```
 
+### Notes
+
+There are 774 files broken and failed to be parsed.
 
 
 > 处理结果可以考虑保存成json
