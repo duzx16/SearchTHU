@@ -3,7 +3,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
 from multiprocessing import Pool
-from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
+# from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_cpus", type=int, default=32)
@@ -11,23 +11,28 @@ parser.add_argument("--retry_failed", action="store_true")
 argv = sys.argv[1:]
 args, _ = parser.parse_known_args(argv)
 
+
 class ProgressBar:
     def __init__(self):
         pass
 
     def set_total(self, tot):
         self.bar = tqdm(total=tot)
-    
+
     def update(self):
         self.bar.update(1)
 
-progress_bar = ProgressBar()  
+
+progress_bar = ProgressBar()
+
 
 class DocParser:
-    def __init__(self):
-        self.tokenizer = JiebaTokenizer()
+    def __init__(self, to_tokenize=False):
+        self.to_tokenize = to_tokenize
+        if self.to_tokenize:
+            self.tokenizer = JiebaTokenizer()
         # self.tokenizer.tmp_dir= "~/.tmp"
-    
+
     def parse(self, path):
         res = self._parse(path)
         progress_bar.update()
@@ -50,22 +55,27 @@ class DocParser:
         return is_english or is_chinese
 
     def tokenize(self, str):
-        l = list(self.tokenizer.cut_for_search(str))
-        res = []
-        for token in l:
-            if self.check_token(token):
-                res.append(token)
-        res = " ".join(res)
-        return res
+        if self.to_tokenize:
+            l = list(self.tokenizer.cut_for_search(str))
+            res = []
+            for token in l:
+                if self.check_token(token):
+                    res.append(token)
+            res = " ".join(res)
+            return res
+        else:
+            return ''
 
     def translate_name(self, path):
         name_old, name_new = "", ""
         for c in path:
-            if c in [" ", "(", ")", "&", "’", "'"]: name_old += "\\%s" % c
+            if c in [" ", "(", ")", "&", "’", "'"]:
+                name_old += "\\%s" % c
             else:
                 name_old += c
-                name_new += c  
-        return name_old, name_new     
+                name_new += c
+        return name_old, name_new
+
 
 class DocParserHtml(DocParser):
     def _parse(self, path):
@@ -78,13 +88,13 @@ class DocParserHtml(DocParser):
                     break
             except:
                 continue
-        if content is None: 
+        if content is None:
             print("Failed to parse %s" % path)
             return None
 
         soup = bs(content, "html.parser")
         res = {}
-        
+
         title = soup.find("title")
         if title is not None:
             res["title"] = title.text
@@ -116,8 +126,9 @@ class DocParserHtml(DocParser):
             for item in soup.find_all(tag):
                 res["content"] += item.text + " "
                 res["content_seg"] += self.tokenize(item.text) + " "
-                
+
         return res
+
 
 class DocParserPdf(DocParserHtml):
     def __init__(self):
@@ -143,6 +154,7 @@ class DocParserPdf(DocParserHtml):
         os.system("rm %s" % new_path)
         return res
 
+
 class DocParserDocx(DocParser):
     def _parse(self, path):
         try:
@@ -158,7 +170,7 @@ class DocParserDocx(DocParser):
             if style.startswith("Heading"):
                 hkey = "h%d" % int(style.split()[1])
                 hkey_seg = "%s_seg" % hkey
-                if not hkey in res: 
+                if not hkey in res:
                     res[hkey], res[hkey_seg] = "", ""
                 res[hkey] += para.text + " "
                 res[hkey_seg] += self.tokenize(para.text) + " "
@@ -171,8 +183,9 @@ class DocParserDocx(DocParser):
 
         return res
 
+
 class DocParserDoc(DocParserPdf):
-    def _parse(self, path):   
+    def _parse(self, path):
         name_old, name_new = self.translate_name(path)
         _name_new = name_new
         name_new += ".tmp.doc"
@@ -184,6 +197,7 @@ class DocParserDoc(DocParserPdf):
         res = super()._parse(name_new)
         os.system("rm %s" % name_new)
         return res
+
 
 def search(dir, files):
     if args.retry_failed:
@@ -205,40 +219,42 @@ def search(dir, files):
                 if path.endswith("." + suffix):
                     files[suffix].append(path)
                     break
-                    
-files = {
-    "html": [],
-    "pdf": [],
-    "doc": [],
-    "docx": []
-}
-root = sys.argv[1]
-print("Searching files...")
-search(root, files)
-num_files = sum([len(files[suffix]) for suffix in files])
-print("%d files found" % num_files)
-parser = {
-    "html": DocParserHtml(),
-    "pdf": DocParserPdf(),
-    "docx": DocParserDocx(),
-    "doc": DocParserDoc()
-}
-failed = []
-for suffix in files:
-    print("Parsing .%s files..." % suffix)
-    progress_bar.set_total( (len(files[suffix]) + args.num_cpus - 1) // args.num_cpus)
-    with Pool(processes=args.num_cpus) as pool:
-        res = pool.map(parser[suffix].parse, files[suffix])
-    print("Writting results...")
-    for i, path in enumerate(tqdm(files[suffix])):
-        with open(path + ".json", "w") as file:
-            file.write(json.dumps(res[i]))
-            if res[i] is None: 
-                failed.append(path)
-    print()
-print("Failed files:")
-for path in failed:
-    print(path)
-with open("failed.json", "w") as file:
-    file.write(json.dumps(failed))
-print("%d/%d failed" % (len(failed), num_files))
+
+
+if __name__ == '__main__':
+    files = {
+        "html": [],
+        "pdf": [],
+        "doc": [],
+        "docx": []
+    }
+    root = sys.argv[1]
+    print("Searching files...")
+    search(root, files)
+    num_files = sum([len(files[suffix]) for suffix in files])
+    print("%d files found" % num_files)
+    parser = {
+        "html": DocParserHtml(),
+        "pdf": DocParserPdf(),
+        "docx": DocParserDocx(),
+        "doc": DocParserDoc()
+    }
+    failed = []
+    for suffix in files:
+        print("Parsing .%s files..." % suffix)
+        progress_bar.set_total((len(files[suffix]) + args.num_cpus - 1) // args.num_cpus)
+        with Pool(processes=args.num_cpus) as pool:
+            res = pool.map(parser[suffix].parse, files[suffix])
+        print("Writting results...")
+        for i, path in enumerate(tqdm(files[suffix])):
+            with open(path + ".json", "w") as file:
+                file.write(json.dumps(res[i]))
+                if res[i] is None:
+                    failed.append(path)
+        print()
+    print("Failed files:")
+    for path in failed:
+        print(path)
+    with open("failed.json", "w") as file:
+        file.write(json.dumps(failed))
+    print("%d/%d failed" % (len(failed), num_files))
