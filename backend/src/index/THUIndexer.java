@@ -36,6 +36,7 @@ public class THUIndexer {
             }
             Directory dir = FSDirectory.open(indexPath);
             indexWriter = new IndexWriter(dir, iwc);
+            indexWriter.commit();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -99,8 +100,9 @@ public class THUIndexer {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         THUIndexer indexer = new THUIndexer(args[1]);
         indexer.indexDirectory(args[0], "");
+        indexer.indexWriter.close();
     }
 }
