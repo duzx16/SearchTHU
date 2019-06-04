@@ -1,6 +1,8 @@
 package index;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,8 +27,10 @@ import org.apache.lucene.store.FSDirectory;
 public class THUIndexer {
     private Analyzer analyzer;
     private IndexWriter indexWriter;
+    private Map<String, String> anchorMap;
 
     public THUIndexer(String indexDir) {
+        anchorMap = new HashMap<>();
         analyzer = new SmartChineseAnalyzer();
         try {
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
@@ -42,16 +46,62 @@ public class THUIndexer {
         }
     }
 
-    public void indexDirectory(String dir_path, String url) {
+    public void indexDirectory(String dir_path, String url, boolean anchor) throws FileNotFoundException, MalformedURLException {
         File dir = new File(dir_path);
+        if(!url.isEmpty()) {
+            url = url + "/";
+        }
         for (File f : Objects.requireNonNull(dir.listFiles())) {
             if (f.isDirectory()) {
-                this.indexDirectory(Paths.get(dir_path, f.getName()).toString(), url + "/" + f.getName());
+                this.indexDirectory(Paths.get(dir_path, f.getName()).toString(), url + f.getName(), anchor);
             } else {
                 if (f.getName().endsWith("html.json")) {
-                    indexJsonFile(Paths.get(dir_path, f.getName()).toString(), url + "/" + f.getName().substring(0, f.getName().length() - 5));
+                    String sub_url = url + f.getName().substring(0, f.getName().length() - 5);
+                    if (anchor) {
+                        saveAnchorFile(Paths.get(dir_path, f.getName()).toString(), sub_url);
+                    } else {
+                        indexJsonFile(Paths.get(dir_path, f.getName()).toString(), sub_url);
+                    }
                 }
+            }
+        }
+    }
 
+    private void saveAnchorFile(String file_path, String url_str) throws FileNotFoundException, MalformedURLException {
+        URL url = new URL("http://" + url_str);
+        final JsonParser parser = new JsonParser();
+        final JsonElement jsonElement = parser.parse(new FileReader(file_path));
+        final JsonObject jsonObject = jsonElement.getAsJsonObject();
+        if (jsonObject.has("links")) {
+            JsonArray links = jsonObject.getAsJsonArray("links");
+            for (JsonElement element : links) {
+                JsonObject linkObject = element.getAsJsonObject();
+                String anchor = linkObject.get("text").getAsString();
+                String link = linkObject.get("href").getAsString();
+                if(link.startsWith("#") || link.startsWith("javascript")) {
+                    link = url_str;
+                } else if (link.startsWith("/")) {
+                    link = url.getHost() + link;
+                } else {
+                    try {
+                        URL link_url = new URL(link);
+                        String path = link_url.getPath();
+                        if (path.isEmpty() || path.equals("/")) {
+                            path = "/index.html";
+                        }
+                        link = link_url.getHost() + path;
+                    } catch (MalformedURLException e) {
+                    }
+                }
+                int pos = link.lastIndexOf('#');
+                if(pos != -1) {
+                    link = link.substring(0, pos);
+                }
+                if (anchorMap.containsKey(link)) {
+                    anchorMap.put(link, anchorMap.get(link) + " " + anchor);
+                } else {
+                    anchorMap.put(link, anchor);
+                }
             }
         }
     }
@@ -64,8 +114,7 @@ public class THUIndexer {
             final JsonObject jsonObject;
             try {
                 jsonObject = jsonElement.getAsJsonObject();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 System.out.println(file_path);
                 throw e;
             }
@@ -83,14 +132,9 @@ public class THUIndexer {
                     case "h6":
                         doc.add(new TextField(key, value.getAsString(), Field.Store.YES));
                         break;
-                    case "links":
-                        final JsonArray jsonArray = value.getAsJsonArray();
-                        for(JsonElement element: jsonArray) {
-                            JsonObject linkObject = element.getAsJsonObject();
-                            String anchor = linkObject.get("text").getAsString();
-                            doc.add(new TextField("anchor", anchor, Field.Store.YES));
-                        }
-                        break;
+                }
+                if (anchorMap.containsKey(url)) {
+                    doc.add(new TextField("anchor", anchorMap.get(url), Field.Store.YES));
                 }
             }
             doc.add(new StoredField("url", url));
@@ -101,8 +145,12 @@ public class THUIndexer {
     }
 
     public static void main(String[] args) throws IOException {
+//        URL url = new URL("http://www.tsinghua.edu.cn");
+//        System.out.println(url.getPath());
         THUIndexer indexer = new THUIndexer(args[1]);
-        indexer.indexDirectory(args[0], "");
+        indexer.indexDirectory(args[0], "", true);
+        System.out.println("Build anchor finish");
+        indexer.indexDirectory(args[0], "", false);
         indexer.indexWriter.close();
     }
 }
