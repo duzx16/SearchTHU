@@ -27,7 +27,7 @@ import org.apache.lucene.store.FSDirectory;
 public class THUIndexer {
     private Analyzer analyzer;
     private IndexWriter indexWriter;
-    private Map<String, String> anchorMap;
+    private Map<String, Set<String>> anchorMap;
 
     public THUIndexer(String indexDir) {
         anchorMap = new HashMap<>();
@@ -48,7 +48,7 @@ public class THUIndexer {
 
     public void indexDirectory(String dir_path, String url, boolean anchor) throws FileNotFoundException, MalformedURLException {
         File dir = new File(dir_path);
-        if(!url.isEmpty()) {
+        if (!url.isEmpty()) {
             url = url + "/";
         }
         for (File f : Objects.requireNonNull(dir.listFiles())) {
@@ -78,7 +78,7 @@ public class THUIndexer {
                 JsonObject linkObject = element.getAsJsonObject();
                 String anchor = linkObject.get("text").getAsString();
                 String link = linkObject.get("href").getAsString();
-                if(link.startsWith("#") || link.startsWith("javascript")) {
+                if (link.startsWith("#") || link.startsWith("javascript")) {
                     link = url_str;
                 } else if (link.startsWith("/")) {
                     link = url.getHost() + link;
@@ -94,14 +94,13 @@ public class THUIndexer {
                     }
                 }
                 int pos = link.lastIndexOf('#');
-                if(pos != -1) {
+                if (pos != -1) {
                     link = link.substring(0, pos);
                 }
-                if (anchorMap.containsKey(link)) {
-                    anchorMap.put(link, anchorMap.get(link) + " " + anchor);
-                } else {
-                    anchorMap.put(link, anchor);
+                if (!anchorMap.containsKey(link)) {
+                    anchorMap.put(link, new HashSet<>());
                 }
+                anchorMap.get(link).add(anchor);
             }
         }
     }
@@ -134,10 +133,11 @@ public class THUIndexer {
                         break;
                 }
                 if (anchorMap.containsKey(url)) {
-                    doc.add(new TextField("anchor", anchorMap.get(url), Field.Store.YES));
+                    doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url).toArray(
+                            new String[0])), Field.Store.YES));
                 }
             }
-            doc.add(new StoredField("url", url));
+            doc.add(new TextField("url", url, Field.Store.YES));
             indexWriter.addDocument(doc);
         } catch (Exception e) {
             e.printStackTrace();
