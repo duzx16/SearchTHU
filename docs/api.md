@@ -36,12 +36,13 @@
     ```
 
 * Document:
+> 这里的title和content都用highlighter做了高亮处理，其中的部分文字使用\<span class="highlight"\>...\</span\>标明
 
   ```json
   {
     // title and abstract might be HTML code to show hightlight
     "title": the title of the page,
-    "abstract": a fragment of the content that matches the query,
+    "content": a fragment of the content that matches the query,
     "url": the url of the page
   }
   ```
