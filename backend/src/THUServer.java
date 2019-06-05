@@ -22,7 +22,7 @@ public class THUServer extends HttpServlet {
 
     public THUServer() throws IOException {
         super();
-        searcher = new THUSearcher(indexDir, new BM25Similarity());
+        searcher = new THUSearcher(indexDir, new BM25Similarity(), "config.json");
         gson = new Gson();
     }
 

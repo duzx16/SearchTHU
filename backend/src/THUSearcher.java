@@ -1,3 +1,6 @@
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
@@ -13,6 +16,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,21 +30,28 @@ public class THUSearcher {
     private IndexSearcher searcher;
     private Analyzer analyzer;
     private SimpleQueryParser parser;
+    private SimpleQueryParser anchor_parser;
     private Map<String, Float> field_weights = new HashMap<>();
     private SimpleHTMLFormatter htmlFormatter;
 
-    public THUSearcher(String indexDir, Similarity similarity) throws IOException {
-        field_weights.put("title", 1.0f);
-        field_weights.put("content", 0.5f);
-        field_weights.put("h1", 5.0f);
+    public THUSearcher(String indexDir, Similarity similarity, String config_path) throws IOException {
+        final JsonParser json_parser = new JsonParser();
+        final JsonElement jsonElement = json_parser.parse(new FileReader(config_path));
+        final JsonObject jsonObject = jsonElement.getAsJsonObject().getAsJsonObject("field_weights");
+        for (final Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+            final String key = entry.getKey();
+            final float value = entry.getValue().getAsFloat();
+            field_weights.put(key, value);
+        }
         analyzer = new SmartChineseAnalyzer();
         Path indexPath = Paths.get(indexDir);
         reader = DirectoryReader.open(FSDirectory.open(indexPath));
         searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarity);
         parser = new SimpleQueryParser(analyzer, field_weights);
+        anchor_parser = new SimpleQueryParser(analyzer, "anchor");
         // highlighter
-        htmlFormatter = new SimpleHTMLFormatter("<span class=\"highlight\">", "</span class=\"highlight\">");
+        htmlFormatter = new SimpleHTMLFormatter("<span class=\"highlight\">", "</span>");
     }
 
     public SearchResults searchQuery(String query_str, int offset, int max_num) throws IOException {
@@ -75,7 +86,7 @@ public class THUSearcher {
 
     public static void main(String[] args) throws IOException {
         Scanner scan = new Scanner(System.in);
-        THUSearcher thuSearcher = new THUSearcher(args[0], new BM25Similarity());
+        THUSearcher thuSearcher = new THUSearcher(args[0], new BM25Similarity(), args[1]);
         String query = scan.nextLine();
         if (query.length() > 1) {
             SearchResults topDocs = thuSearcher.searchQuery(query, 0, 10);
