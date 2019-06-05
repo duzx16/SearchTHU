@@ -15,13 +15,13 @@ import com.google.gson.Gson;
 @WebServlet(name = "THUServer")
 public class THUServer extends HttpServlet {
     public static final int PAGE_RESULT = 10;
-    public static final String indexDir = "forIndex";
+    public static final String indexDir = "/home/duzx16/SearchTHU/test";
     private THUSearcher searcher;
     private Gson gson;
 
     public THUServer() throws IOException {
         super();
-        searcher = new THUSearcher(indexDir, new BM25Similarity(), "config.json");
+        searcher = new THUSearcher(indexDir, new BM25Similarity(), "configuration.json");
         gson = new Gson();
     }
 
@@ -48,6 +48,7 @@ public class THUServer extends HttpServlet {
         if (pageString != null) {
             page = Integer.parseInt(pageString);
         }
+        System.out.println(queryString);
         if (queryString == null) {
             System.out.println("null query");
             //request.getRequestDispatcher("/Image.jsp").forward(request, response);

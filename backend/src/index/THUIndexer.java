@@ -55,7 +55,7 @@ public class THUIndexer {
             if (f.isDirectory()) {
                 this.indexDirectory(Paths.get(dir_path, f.getName()).toString(), url + f.getName(), anchor);
             } else {
-                if (f.getName().endsWith("html.json")) {
+                if (f.getName().endsWith(".json")) {
                     String sub_url = url + f.getName().substring(0, f.getName().length() - 5);
                     if (anchor) {
                         saveAnchorFile(Paths.get(dir_path, f.getName()).toString(), sub_url);
@@ -145,8 +145,6 @@ public class THUIndexer {
     }
 
     public static void main(String[] args) throws IOException {
-//        URL url = new URL("http://www.tsinghua.edu.cn");
-//        System.out.println(url.getPath());
         THUIndexer indexer = new THUIndexer(args[1]);
         indexer.indexDirectory(args[0], "", true);
         System.out.println("Build anchor finish");

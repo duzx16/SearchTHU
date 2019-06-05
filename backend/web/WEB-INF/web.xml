@@ -10,7 +10,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>THUServer</servlet-name>
-        <url-pattern>/servlet/THUServer</url-pattern>
+        <url-pattern>/servlet</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>

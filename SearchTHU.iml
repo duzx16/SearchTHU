@@ -23,60 +23,12 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Tomcat 9.0.20" level="application_server_libraries" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/backend/web/WEB-INF/lib/json-20180813.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/backend/web/WEB-INF/lib/lucene-8.1.1/core/lucene-core-8.1.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="com.google.code.gson:gson:2.8.5" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/backend/web/WEB-INF/lib/lucene-8.1.1/analysis/smartcn/lucene-analyzers-smartcn-8.1.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/backend/web/WEB-INF/lib/lucene-8.1.1/analysis/common/lucene-analyzers-common-8.1.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/backend/web/WEB-INF/lib/lucene-8.1.1/queryparser/lucene-queryparser-8.1.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/backend/web/WEB-INF/lib/lucene-8.1.1/highlighter/lucene-highlighter-8.1.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="lucene-core-8.1.1" level="project" />
+    <orderEntry type="library" name="lucene-analyzers-common-8.1.1" level="project" />
+    <orderEntry type="library" name="lucene-analyzers-smartcn-8.1.1" level="project" />
+    <orderEntry type="library" name="lucene-highlighter-8.1.1" level="project" />
+    <orderEntry type="library" name="lucene-queryparser-8.1.1" level="project" />
+    <orderEntry type="library" name="lucene-memory-8.1.1" level="project" />
   </component>
 </module>

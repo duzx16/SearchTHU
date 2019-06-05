@@ -58,10 +58,13 @@ public class THUSearcher {
         Query query = parser.parse(query_str);
         TopDocs topDocs = searcher.search(query, offset + max_num);
         SearchResults results = new SearchResults();
+        if(topDocs.scoreDocs.length < offset + max_num) {
+            max_num = topDocs.scoreDocs.length - offset;
+        }
         results.documents = new SearchDocument[max_num];
         Highlighter highlighter = new Highlighter(htmlFormatter, new QueryScorer(query));
-        for (int i = offset; i < topDocs.scoreDocs.length; ++i) {
-            int id = topDocs.scoreDocs[i].doc;
+        for (int i = 0; i < max_num; ++i) {
+            int id = topDocs.scoreDocs[i + offset].doc;
             Document document = searcher.doc(id);
             String title = document.get("title");
             String content = document.get("content");
