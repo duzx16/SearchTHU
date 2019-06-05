@@ -7,6 +7,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.highlight.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
@@ -83,6 +84,7 @@ public class THUSearcher {
             }
             results.documents[i] = new SearchDocument(title, content, url);
         }
+        results.total = (int) topDocs.totalHits.value;
         return results;
     }
 

@@ -49,6 +49,7 @@ public class THUServer extends HttpServlet {
             page = Integer.parseInt(pageString);
         }
         System.out.println(queryString);
+        System.out.println(request.getServletPath());
         if (queryString == null) {
             System.out.println("null query");
             //request.getRequestDispatcher("/Image.jsp").forward(request, response);
