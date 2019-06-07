@@ -12,12 +12,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -69,9 +66,15 @@ public class THUIndexer {
 
     private void saveAnchorFile(String file_path, String url_str) throws FileNotFoundException, MalformedURLException {
         URL url = new URL("http://" + url_str);
-        final JsonParser parser = new JsonParser();
-        final JsonElement jsonElement = parser.parse(new FileReader(file_path));
-        final JsonObject jsonObject = jsonElement.getAsJsonObject();
+        final JsonObject jsonObject;
+        try {
+            final JsonParser parser = new JsonParser();
+            final JsonElement jsonElement = parser.parse(new FileReader(file_path));
+            jsonObject = jsonElement.getAsJsonObject();
+        } catch (IllegalStateException e) {
+            System.out.println(file_path);
+            return;
+        }
         if (jsonObject.has("links")) {
             JsonArray links = jsonObject.getAsJsonArray("links");
             for (JsonElement element : links) {
@@ -108,14 +111,15 @@ public class THUIndexer {
     private void indexJsonFile(String file_path, String url) {
         try {
             Document doc = new Document();
-            final JsonParser parser = new JsonParser();
-            final JsonElement jsonElement = parser.parse(new FileReader(file_path));
+            Path path = Paths.get(file_path);
             final JsonObject jsonObject;
             try {
+                final JsonParser parser = new JsonParser();
+                final JsonElement jsonElement = parser.parse(new FileReader(file_path));
                 jsonObject = jsonElement.getAsJsonObject();
-            } catch (Exception e) {
+            } catch (IllegalStateException e) {
                 System.out.println(file_path);
-                throw e;
+                return;
             }
             for (final Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
                 final String key = entry.getKey();
@@ -137,7 +141,18 @@ public class THUIndexer {
                             new String[0])), Field.Store.YES));
                 }
             }
-            doc.add(new TextField("url", url, Field.Store.YES));
+            doc.add(new StringField("url", url, Field.Store.YES));
+            String file_type;
+            if (file_path.endsWith(".html.json") || file_path.endsWith(".htm.json")) {
+                file_type = "html";
+            } else if (file_path.endsWith(".doc.json") || file_path.endsWith("docx.json")) {
+                file_type = "doc";
+            } else if (file_path.endsWith("pdf.json")) {
+                file_type = "pdf";
+            } else {
+                file_type = "";
+            }
+            doc.add(new StringField("type", file_type, Field.Store.YES));
             indexWriter.addDocument(doc);
         } catch (Exception e) {
             e.printStackTrace();
