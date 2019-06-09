@@ -67,10 +67,41 @@ public class THUServer extends HttpServlet {
             String noneMatch = request.getParameter("none");
             String position = request.getParameter("position");
             if (position != null) {
-
+                switch (position) {
+                    case "any":
+                    case "title":
+                    case "content":
+                        break;
+                    case "link":
+                        position = "anchor";
+                        break;
+                    default:
+                        System.out.println("Invalid position: " + position);
+                        position = "any";
+                        break;
+                }
+            } else {
+                position = "any";
             }
             String site = request.getParameter("site");
             String file_type = request.getParameter("file_type");
+            if (file_type != null) {
+                switch (file_type) {
+                    case "any":
+                    case "pdf":
+                    case "html":
+                        break;
+                    case "doc/docx":
+                        file_type = "doc";
+                        break;
+                    default:
+                        System.out.println("Invalid file type: " + file_type);
+                        file_type = "any";
+                        break;
+                }
+            } else {
+                file_type = "any";
+            }
             SearchResults results = searcher.advancedSearch(exactMatch, anyMatch, noneMatch, position, site, file_type, offset, RESULTS_PER_PAGE);
             out.write(gson.toJson(results));
             out.close();

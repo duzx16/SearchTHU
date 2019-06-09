@@ -20,12 +20,10 @@ import org.apache.lucene.store.FSDirectory;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Vector;
+import java.util.*;
 
 
 public class THUSearcher {
@@ -100,41 +98,44 @@ public class THUSearcher {
         if (site != null) {
             queries.add(String.format("url: \"%s\"", site));
         }
-        if (file_type != null) {
+        if (!file_type.equals("any")) {
             queries.add(String.format("type: \"%s\"", file_type));
         }
         String[] fileds;
         if (position.equals("any")) {
             fileds = new String[]{"title", "content", "anchor"};
-        } else if (position.equals("link")) {
-            fileds = new String[]{"link"};
         } else {
             fileds = new String[]{position};
         }
         Vector<String> fields_queries = new Vector<>();
+        Vector<String> none_queries = new Vector<>();
         for (String field : fileds) {
             Vector<String> field_queries = new Vector<>();
-            if(exactMatch != null) {
+            if (exactMatch != null) {
                 field_queries.add(String.format("\"%s\"", exactMatch));
             }
-            if(anyMatch != null) {
-                field_queries.add(String.format("(%s)", String.join(" OR ", anyMatch.split(" "))));
-            }
-            if(noneMatch != null) {
-                Vector<String> none_queries = new Vector<>();
-                for(String none: noneMatch.split(" ")) {
-                    none_queries.add("NOT " + none);
+            if (anyMatch != null) {
+                for (String any : anyMatch.split(" ")) {
+                    field_queries.add(String.format("\"%s\"", any));
                 }
-                field_queries.add(String.format("(%s)", String.join(" AND ", none_queries)));
             }
-            fields_queries.add(String.format("%s: (%s)", field, String.join(" AND ", field_queries)));
+            fields_queries.add(String.format("%s: (%s)", field, String.join(" OR ", field_queries)));
         }
-        queries.add(String.format("(%s)", String.join(" OR ", fields_queries)));
+        none_queries.add(String.format("(%s)", String.join(" OR ", fields_queries)));
+        if (noneMatch != null) {
+            for (String field : fileds) {
+                for (String none : noneMatch.split(" ")) {
+                    none_queries.add(String.format("%s: \"%s\"", field, none));
+                }
+            }
+        }
+        queries.add(String.format("(%s)", String.join(" NOT ", none_queries)));
         String query_str = String.join(" AND ", queries);
         System.out.println(query_str);
         Query query;
         try {
             query = advanced_parser.parse(query_str);
+            System.out.println(query);
         } catch (ParseException e) {
             System.out.println(e.expectedTokenSequences);
             return null;
