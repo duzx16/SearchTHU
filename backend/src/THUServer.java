@@ -1,6 +1,4 @@
-import org.apache.lucene.document.Document;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.BM25Similarity;
 
 import javax.servlet.ServletException;
@@ -10,11 +8,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import com.google.gson.Gson;
 
 @WebServlet(name = "THUServer")
 public class THUServer extends HttpServlet {
-    public static final int PAGE_RESULT = 10;
+    public static final int RESULTS_PER_PAGE = 10;
     public static final String indexDir = "/home/duzx16/SearchTHU/test";
     private THUSearcher searcher;
     private Gson gson;
@@ -26,11 +25,11 @@ public class THUServer extends HttpServlet {
     }
 
     public ScoreDoc[] showList(ScoreDoc[] results, int page) {
-        if (results == null || results.length < (page - 1) * PAGE_RESULT) {
+        if (results == null || results.length < (page - 1) * RESULTS_PER_PAGE) {
             return null;
         }
-        int start = Math.max((page - 1) * PAGE_RESULT, 0);
-        int docnum = Math.min(results.length - start, PAGE_RESULT);
+        int start = Math.max((page - 1) * RESULTS_PER_PAGE, 0);
+        int docnum = Math.min(results.length - start, RESULTS_PER_PAGE);
         ScoreDoc[] ret = new ScoreDoc[docnum];
         for (int i = 0; i < docnum; i++) {
             ret[i] = results[start + i];
@@ -41,24 +40,41 @@ public class THUServer extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json;charset=utf-8");
         request.setCharacterEncoding("utf-8");
-        PrintWriter out = response.getWriter();
-        String queryString = request.getParameter("query");
         String pageString = request.getParameter("page");
         int page = 1;
         if (pageString != null) {
             page = Integer.parseInt(pageString);
         }
-        System.out.println(queryString);
-        System.out.println(request.getServletPath());
-        if (queryString == null) {
-            System.out.println("null query");
-            //request.getRequestDispatcher("/Image.jsp").forward(request, response);
-        } else {
-            int offset = PAGE_RESULT * (page - 1);
-            SearchResults results = searcher.searchQuery(queryString, offset, PAGE_RESULT);
+        int offset = RESULTS_PER_PAGE * (page - 1);
+        if (request.getServletPath().equals("/servlet/THUSearch/_query")) {
+            PrintWriter out = response.getWriter();
+            String queryString = request.getParameter("query");
+
+            System.out.println(queryString);
+            System.out.println(request.getServletPath());
+            if (queryString == null) {
+                System.out.println("null query");
+                //request.getRequestDispatcher("/Image.jsp").forward(request, response);
+            } else {
+                SearchResults results = searcher.searchQuery(queryString, offset, RESULTS_PER_PAGE);
+                out.write(gson.toJson(results));
+            }
+            out.close();
+        } else if (request.getServletPath().equals("/servlet/THUSearch/_advanced_query")) {
+            PrintWriter out = response.getWriter();
+            String exactMatch = request.getParameter("exact");
+            String anyMatch = request.getParameter("any");
+            String noneMatch = request.getParameter("none");
+            String position = request.getParameter("position");
+            if (position != null) {
+
+            }
+            String site = request.getParameter("site");
+            String file_type = request.getParameter("file_type");
+            SearchResults results = searcher.advancedSearch(exactMatch, anyMatch, noneMatch, position, site, file_type, offset, RESULTS_PER_PAGE);
             out.write(gson.toJson(results));
+            out.close();
         }
-        out.close();
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

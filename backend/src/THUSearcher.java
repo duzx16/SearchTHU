@@ -7,10 +7,11 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.highlight.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
@@ -24,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Vector;
 
 
 public class THUSearcher {
@@ -31,7 +33,7 @@ public class THUSearcher {
     private IndexSearcher searcher;
     private Analyzer analyzer;
     private SimpleQueryParser parser;
-    private SimpleQueryParser anchor_parser;
+    private QueryParser advanced_parser;
     private Map<String, Float> field_weights = new HashMap<>();
     private SimpleHTMLFormatter htmlFormatter;
 
@@ -50,16 +52,14 @@ public class THUSearcher {
         searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarity);
         parser = new SimpleQueryParser(analyzer, field_weights);
-        anchor_parser = new SimpleQueryParser(analyzer, "anchor");
+        advanced_parser = new QueryParser("content", analyzer);
         // highlighter
         htmlFormatter = new SimpleHTMLFormatter("<span class=\"highlight\">", "</span>");
     }
 
-    public SearchResults searchQuery(String query_str, int offset, int max_num) throws IOException {
-        Query query = parser.parse(query_str);
-        TopDocs topDocs = searcher.search(query, offset + max_num);
+    private SearchResults highlightResult(Query query, TopDocs topDocs, int offset, int max_num) throws IOException {
         SearchResults results = new SearchResults();
-        if(topDocs.scoreDocs.length < offset + max_num) {
+        if (topDocs.scoreDocs.length < offset + max_num) {
             max_num = topDocs.scoreDocs.length - offset;
         }
         results.documents = new SearchDocument[max_num];
@@ -86,6 +86,61 @@ public class THUSearcher {
         }
         results.total = (int) topDocs.totalHits.value;
         return results;
+    }
+
+    public SearchResults searchQuery(String query_str, int offset, int max_num) throws IOException {
+        Query query = parser.parse(query_str);
+        TopDocs topDocs = searcher.search(query, offset + max_num);
+        SearchResults results = highlightResult(query, topDocs, offset, max_num);
+        return results;
+    }
+
+    public SearchResults advancedSearch(String exactMatch, String anyMatch, String noneMatch, String position, String site, String file_type, int offset, int max_num) throws IOException {
+        Vector<String> queries = new Vector<>();
+        if (site != null) {
+            queries.add(String.format("url: \"%s\"", site));
+        }
+        if (file_type != null) {
+            queries.add(String.format("type: \"%s\"", file_type));
+        }
+        String[] fileds;
+        if (position.equals("any")) {
+            fileds = new String[]{"title", "content", "anchor"};
+        } else if (position.equals("link")) {
+            fileds = new String[]{"link"};
+        } else {
+            fileds = new String[]{position};
+        }
+        Vector<String> fields_queries = new Vector<>();
+        for (String field : fileds) {
+            Vector<String> field_queries = new Vector<>();
+            if(exactMatch != null) {
+                field_queries.add(String.format("\"%s\"", exactMatch));
+            }
+            if(anyMatch != null) {
+                field_queries.add(String.format("(%s)", String.join(" OR ", anyMatch.split(" "))));
+            }
+            if(noneMatch != null) {
+                Vector<String> none_queries = new Vector<>();
+                for(String none: noneMatch.split(" ")) {
+                    none_queries.add("NOT " + none);
+                }
+                field_queries.add(String.format("(%s)", String.join(" AND ", none_queries)));
+            }
+            fields_queries.add(String.format("%s: (%s)", field, String.join(" AND ", field_queries)));
+        }
+        queries.add(String.format("(%s)", String.join(" OR ", fields_queries)));
+        String query_str = String.join(" AND ", queries);
+        System.out.println(query_str);
+        Query query;
+        try {
+            query = advanced_parser.parse(query_str);
+        } catch (ParseException e) {
+            System.out.println(e.expectedTokenSequences);
+            return null;
+        }
+        TopDocs topDocs = searcher.search(query, offset + max_num);
+        return highlightResult(query, topDocs, offset, max_num);
     }
 
 

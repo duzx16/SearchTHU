@@ -24,11 +24,13 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Tomcat 9.0.20" level="application_server_libraries" />
     <orderEntry type="library" name="com.google.code.gson:gson:2.8.5" level="project" />
-    <orderEntry type="library" name="lucene-core-8.1.1" level="project" />
-    <orderEntry type="library" name="lucene-analyzers-common-8.1.1" level="project" />
-    <orderEntry type="library" name="lucene-analyzers-smartcn-8.1.1" level="project" />
+    <orderEntry type="library" exported="" name="lucene-core-8.1.1" level="project" />
+    <orderEntry type="library" exported="" name="lucene-analyzers-common-8.1.1" level="project" />
+    <orderEntry type="library" exported="" name="lucene-analyzers-smartcn-8.1.1" level="project" />
     <orderEntry type="library" name="lucene-highlighter-8.1.1" level="project" />
     <orderEntry type="library" name="lucene-queryparser-8.1.1" level="project" />
     <orderEntry type="library" name="lucene-memory-8.1.1" level="project" />
+    <orderEntry type="library" name="json-20180813" level="project" />
+    <orderEntry type="library" name="Python 3.7 (SearchTHU) interpreter library" level="application" />
   </component>
 </module>

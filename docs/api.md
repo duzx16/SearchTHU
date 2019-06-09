@@ -66,7 +66,8 @@
   	// all these are optional
   	"position": can only be "any", "title", "content", "link",
   	"site": specifiy domain of the site to search, please check it\'s in the format of URL in the frontend
-  	"file_type": can only be "any", "html", "pdf", "doc/docx"
+  	"file_type": can only be "any", "html", "pdf", "doc/docx",
+    "page": 当前的页数，大于等于1
   }
   ```
 
