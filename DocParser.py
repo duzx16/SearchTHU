@@ -3,14 +3,13 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
 from multiprocessing import Pool
-# from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
+from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_cpus", type=int, default=32)
 parser.add_argument("--retry_failed", action="store_true")
 argv = sys.argv[1:]
 args, _ = parser.parse_known_args(argv)
-
 
 class ProgressBar:
     def __init__(self):

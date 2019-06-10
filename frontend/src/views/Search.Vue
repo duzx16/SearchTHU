@@ -12,9 +12,10 @@
         </b-form>
       </div>
       <div class="search-output">
-        <div v-for="item in documents" :key="item.index">
-          <a class="title" v-html="item.title" href="item.url"></a>
+        <div class="document" v-for="item in documents" :key="item.index">
+          <a class="title" v-html="item.title" v-bind:href="item.url" target="_blank"></a>
           <div class="content" v-html="item.content"></div>
+          <span class="url">{{ item.url }}</span>
         </div>
       </div>
     </b-container>
@@ -55,6 +56,7 @@ export default {
       this.total = response.data.total
       for (let i = 0; i < this.documents.length; ++i) {
         this.documents[i].index = i
+        this.documents[i].url = 'http://' + this.documents[i].url
       }
     },
     goSearch () {
@@ -84,6 +86,35 @@ export default {
     vertical-align: middle;
     color: #6b008d;
     margin-right: 10px;
+  }
+}
+
+.search-output {
+  width: 820px;
+
+  .document {
+    margin-top: 20px;
+
+    .title {
+      font-size: 18px;
+
+      .highlight {
+        color: #c00;
+      }      
+    }
+
+    .url {
+      max-width: 100%;
+    }
+
+    .content {
+      font-size: 14px;
+
+      .highlight {
+        font-weight: bold;
+        color: #c00;
+      }
+    }
   }
 }
 
