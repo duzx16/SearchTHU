@@ -15,7 +15,6 @@
         <div v-for="item in documents" :key="item.index">
           <a class="title" v-html="item.title" href="item.url"></a>
           <div class="content" v-html="item.content"></div>
-          
         </div>
       </div>
     </b-container>
@@ -30,9 +29,17 @@ export default {
   name: 'search',
   components: { HeaderNavbar },
   data () {
+    let query = '清华'
+    if (this.$route.params.query !== undefined) {
+      query = this.$route.params.query
+    }
+    let page = 1
+    if (this.$route.params.page !== undefined) {
+      page = parseInt(this.$route.params.query)
+    }
     return {
-      query: '清华',
-      page: 1,
+      query,
+      page,
       documents: [],
       total: 0
     }
@@ -51,7 +58,8 @@ export default {
       }
     },
     goSearch () {
-      alert('TODO')
+      this.page = 1
+      this.getResults()
     }
   },
   mounted () {
