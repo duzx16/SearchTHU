@@ -1,9 +1,9 @@
 <template>
   <header class="header-nav">
-    <b-navbar toggleable="md" type="dark" variant="info">
+    <!-- <b-navbar toggleable="md" type="dark" variant="info">
       <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
       <b-navbar-brand href="/">{{ appName }}</b-navbar-brand>
-    </b-navbar>
+    </b-navbar> -->
   </header>
 </template>
 
@@ -15,7 +15,7 @@ export default {
   },
   data () {
     return {
-      appName: 'Tomasulo Simulator'
+      appName: 'THU Search'
     }
   }
 }
@@ -31,8 +31,7 @@ export default {
 }
 
 .container-main {
-  padding: 0px 20px;
-  margin-top: 70px;
+  padding: 15px 30px;
 }
 
 .navbar-dark .navbar-nav {
@@ -45,8 +44,8 @@ export default {
 }
 
 .btn-primary {
-  background-color: #00a6bb !important;
-  border-color: #00a6bb !important;
+  background-color: #7a00ab !important;
+  border-color: #7a00ab !important;
 }
 
 a {
