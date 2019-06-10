@@ -12,7 +12,7 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://166.111.5.161:8044/SearchTHU_war/servlet/THUSearch',
         changeOrigin: true,
         pathRewrite: {
           '^/api': '/'

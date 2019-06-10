@@ -2,36 +2,60 @@
   <div>
     <header-navbar></header-navbar>
     <b-container fluid class="container-main">
-      <b-row class="search-input">
+      <div class="search-input">
         <b-form @submit="goSearch">
           <span class="title">THU Search</span>
-          <b-form-input v-model="text" placeholder=""></b-form-input>
+          <b-form-input v-model="query" placeholder=""></b-form-input>
           <b-button class="btn-run" type="submit" variant="primary">
             Search
           </b-button>
         </b-form>
-      </b-row>
-      <b-row class="search-output">
-      </b-row>
+      </div>
+      <div class="search-output">
+        <div v-for="item in documents" :key="item.index">
+          <a class="title" v-html="item.title" href="item.url"></a>
+          <div class="content" v-html="item.content"></div>
+          
+        </div>
+      </div>
     </b-container>
   </div>
 </template>
 
 <script>
 import HeaderNavbar from '@/components/HeaderNavbar.vue'
+import axios from 'axios'
 
 export default {
   name: 'search',
   components: { HeaderNavbar },
   data () {
     return {
-      appName: 'Tomasulo Simulator'
+      query: '清华',
+      page: 1,
+      documents: [],
+      total: 0
     }
   },
   methods: {
+    async getResults () {
+      const response = await axios.get(
+        '/api/_query', {
+          params: { 'query': this.query, 'page': this.page }
+      })
+      console.log(response)
+      this.documents = response.data.documents
+      this.total = response.data.total
+      for (let i = 0; i < this.documents.length; ++i) {
+        this.documents[i].index = i
+      }
+    },
     goSearch () {
       alert('TODO')
     }
+  },
+  mounted () {
+    this.getResults()
   }
 }
 </script>

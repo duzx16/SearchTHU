@@ -31,7 +31,7 @@ export default {
 }
 
 .container-main {
-  padding: 15px 30px;
+  padding: 15px;
 }
 
 .navbar-dark .navbar-nav {
