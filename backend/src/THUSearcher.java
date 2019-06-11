@@ -6,15 +6,14 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.highlight.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
@@ -95,8 +94,12 @@ public class THUSearcher {
 
     public SearchResults advancedSearch(String exactMatch, String anyMatch, String noneMatch, String position, String site, String file_type, int offset, int max_num) throws IOException {
         Vector<String> queries = new Vector<>();
+        BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
+        query_builder.setMinimumNumberShouldMatch(1);
+        // todo: this is not right
         if (site != null) {
-            queries.add(String.format("url: \"%s\"", site));
+            query_builder.add(new TermQuery(new Term("url", site)), BooleanClause.Occur.MUST);
+            query_builder.setMinimumNumberShouldMatch(2);
         }
         if (!file_type.equals("any")) {
             queries.add(String.format("type: \"%s\"", file_type));
@@ -140,7 +143,9 @@ public class THUSearcher {
             System.out.println(e.expectedTokenSequences);
             return null;
         }
-        TopDocs topDocs = searcher.search(query, offset + max_num);
+        query_builder.add(query, BooleanClause.Occur.MUST);
+        Query final_query = query_builder.build();
+        TopDocs topDocs = searcher.search(final_query, offset + max_num);
         return highlightResult(query, topDocs, offset, max_num);
     }
 
