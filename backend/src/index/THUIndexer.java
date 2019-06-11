@@ -108,7 +108,13 @@ public class THUIndexer {
         }
     }
 
-    private void indexJsonFile(String file_path, String url) {
+    private void indexJsonFile(String file_path, String url_str) {
+        URL url = null;
+        try {
+            url = new URL("http://" + url_str);
+        } catch (MalformedURLException e) {
+            System.out.println(url_str);
+        }
         try {
             Document doc = new Document();
             Path path = Paths.get(file_path);
@@ -136,12 +142,14 @@ public class THUIndexer {
                         doc.add(new TextField(key, value.getAsString(), Field.Store.YES));
                         break;
                 }
-                if (anchorMap.containsKey(url)) {
-                    doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url).toArray(
+                if (anchorMap.containsKey(url_str)) {
+                    doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url_str).toArray(
                             new String[0])), Field.Store.YES));
                 }
             }
-            doc.add(new StringField("url", url, Field.Store.YES));
+            if(url != null) {
+                doc.add(new StringField("url", url.getHost(), Field.Store.YES));
+            }
             String file_type;
             if (file_path.endsWith(".html.json") || file_path.endsWith(".htm.json")) {
                 file_type = "html";
