@@ -95,11 +95,8 @@ public class THUSearcher {
     public SearchResults advancedSearch(String exactMatch, String anyMatch, String noneMatch, String position, String site, String file_type, int offset, int max_num) throws IOException {
         Vector<String> queries = new Vector<>();
         BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
-        query_builder.setMinimumNumberShouldMatch(1);
-        // todo: this is not right
         if (site != null) {
-            query_builder.add(new TermQuery(new Term("url", site)), BooleanClause.Occur.MUST);
-            query_builder.setMinimumNumberShouldMatch(2);
+            query_builder.add(new TermQuery(new Term("site", site)), BooleanClause.Occur.MUST);
         }
         if (!file_type.equals("any")) {
             queries.add(String.format("type: \"%s\"", file_type));

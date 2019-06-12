@@ -31,6 +31,7 @@ public class THUIndexer {
     private Map<String, Set<String>> anchorMap;
     private Graph<String, DefaultEdge> linkGraph;
     private Map<String, Double> pagerank_scores;
+    private String[] must_fields;
 
     public THUIndexer(String indexDir) {
         anchorMap = new HashMap<>();
@@ -48,6 +49,7 @@ public class THUIndexer {
             e.printStackTrace();
         }
         linkGraph = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+        must_fields = new String[]{"title", "content"};
     }
 
     public void indexDirectory(String dir_path, String url, boolean anchor) throws FileNotFoundException, MalformedURLException {
@@ -141,12 +143,20 @@ public class THUIndexer {
                 System.out.println(file_path);
                 return;
             }
+            for(String key: must_fields) {
+                String text = "";
+                if(jsonObject.has(key)) {
+                    text = jsonObject.get(key).getAsString();
+                }
+                doc.add(new TextField(key, text, Field.Store.YES));
+            }
             for (final Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
                 final String key = entry.getKey();
                 final JsonElement value = entry.getValue();
                 switch (key) {
                     case "title":
                     case "content":
+                        break;
                     case "h1":
                     case "h2":
                     case "h3":
@@ -156,17 +166,18 @@ public class THUIndexer {
                         doc.add(new TextField(key, value.getAsString(), Field.Store.YES));
                         break;
                 }
-                if (anchorMap.containsKey(url_str)) {
-                    doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url_str).toArray(
-                            new String[0])), Field.Store.YES));
-                }
-                if (pagerank_scores.containsKey(url_str)) {
-                    doc.add(new FeatureField("features", "pagerank", pagerank_scores.get(url_str).floatValue()));
-                }
+            }
+            if (anchorMap.containsKey(url_str)) {
+                doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url_str).toArray(
+                        new String[0])), Field.Store.YES));
+            }
+            if (pagerank_scores.containsKey(url_str)) {
+                doc.add(new FeatureField("features", "pagerank", pagerank_scores.get(url_str).floatValue()));
             }
             if (url != null) {
-                doc.add(new StringField("url", url.getHost(), Field.Store.YES));
+                doc.add(new StringField("site", url.getHost(), Field.Store.YES));
             }
+            doc.add(new StoredField("url", url_str));
             String file_type;
             if (file_path.endsWith(".html.json") || file_path.endsWith(".htm.json")) {
                 file_type = "html";
