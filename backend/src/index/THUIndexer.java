@@ -19,12 +19,18 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.scoring.PageRank;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
 
 public class THUIndexer {
     private Analyzer analyzer;
     private IndexWriter indexWriter;
     private Map<String, Set<String>> anchorMap;
+    private Graph<String, DefaultEdge> linkGraph;
+    private Map<String, Double> pagerank_scores;
 
     public THUIndexer(String indexDir) {
         anchorMap = new HashMap<>();
@@ -41,6 +47,7 @@ public class THUIndexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        linkGraph = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
     }
 
     public void indexDirectory(String dir_path, String url, boolean anchor) throws FileNotFoundException, MalformedURLException {
@@ -100,6 +107,13 @@ public class THUIndexer {
                 if (pos != -1) {
                     link = link.substring(0, pos);
                 }
+                if (!linkGraph.containsVertex(url_str)) {
+                    linkGraph.addVertex(url_str);
+                }
+                if (!linkGraph.containsVertex(link)) {
+                    linkGraph.addVertex(link);
+                }
+                linkGraph.addEdge(url_str, link);
                 if (!anchorMap.containsKey(link)) {
                     anchorMap.put(link, new HashSet<>());
                 }
@@ -146,8 +160,11 @@ public class THUIndexer {
                     doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url_str).toArray(
                             new String[0])), Field.Store.YES));
                 }
+                if (pagerank_scores.containsKey(url_str)) {
+                    doc.add(new FeatureField("features", "pagerank", pagerank_scores.get(url_str).floatValue()));
+                }
             }
-            if(url != null) {
+            if (url != null) {
                 doc.add(new StringField("url", url.getHost(), Field.Store.YES));
             }
             String file_type;
@@ -170,6 +187,8 @@ public class THUIndexer {
     public static void main(String[] args) throws IOException {
         THUIndexer indexer = new THUIndexer(args[1]);
         indexer.indexDirectory(args[0], "", true);
+        PageRank<String, DefaultEdge> pageRank = new PageRank<>(indexer.linkGraph);
+        indexer.pagerank_scores = pageRank.getScores();
         System.out.println("Build anchor finish");
         indexer.indexDirectory(args[0], "", false);
         indexer.indexWriter.close();

@@ -32,5 +32,6 @@
     <orderEntry type="library" name="lucene-memory-8.1.1" level="project" />
     <orderEntry type="library" name="json-20180813" level="project" />
     <orderEntry type="library" name="Python 3.7 (SearchTHU) interpreter library" level="application" />
+    <orderEntry type="library" name="org.jgrapht:jgrapht-core:1.3.1" level="project" />
   </component>
 </module>
