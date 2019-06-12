@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.FeatureField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -19,7 +20,6 @@ import org.apache.lucene.store.FSDirectory;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -67,13 +67,15 @@ public class THUSearcher {
             String title = document.get("title");
             String content = document.get("content");
             String url = document.get("url");
-            TokenStream titleTokenStream = TokenSources.getAnyTokenStream(searcher.getIndexReader(), id, "title", analyzer);
+            TokenStream titleTokenStream = TokenSources.getAnyTokenStream(searcher.getIndexReader(), id, "title",
+                    analyzer);
             try {
                 title = highlighter.getBestFragment(titleTokenStream, title);
             } catch (InvalidTokenOffsetsException e) {
                 System.out.println(title);
             }
-            TokenStream contentTokenStream = TokenSources.getAnyTokenStream(searcher.getIndexReader(), id, "content", analyzer);
+            TokenStream contentTokenStream = TokenSources.getAnyTokenStream(searcher.getIndexReader(), id, "content",
+                    analyzer);
             try {
                 content = highlighter.getBestFragments(contentTokenStream, content, 3, "...");
             } catch (InvalidTokenOffsetsException e) {
@@ -85,14 +87,23 @@ public class THUSearcher {
         return results;
     }
 
+    private Query addPageRank(Query query) {
+        Query pagerank = FeatureField.newSaturationQuery("features", "pagerank");
+        Query final_query = new BooleanQuery.Builder().add(query, BooleanClause.Occur.MUST).add(pagerank,
+                BooleanClause.Occur.SHOULD).build();
+        return final_query;
+    }
+
     public SearchResults searchQuery(String query_str, int offset, int max_num) throws IOException {
         Query query = parser.parse(query_str);
         TopDocs topDocs = searcher.search(query, offset + max_num);
+        query = addPageRank(query);
         SearchResults results = highlightResult(query, topDocs, offset, max_num);
         return results;
     }
 
-    public SearchResults advancedSearch(String exactMatch, String anyMatch, String noneMatch, String position, String site, String file_type, int offset, int max_num) throws IOException {
+    public SearchResults advancedSearch(String exactMatch, String anyMatch, String noneMatch, String position,
+                                        String site, String file_type, int offset, int max_num) throws IOException {
         Vector<String> queries = new Vector<>();
         BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
         if (site != null) {
@@ -142,6 +153,7 @@ public class THUSearcher {
         }
         query_builder.add(query, BooleanClause.Occur.MUST);
         Query final_query = query_builder.build();
+        final_query = addPageRank(final_query);
         TopDocs topDocs = searcher.search(final_query, offset + max_num);
         return highlightResult(query, topDocs, offset, max_num);
     }
