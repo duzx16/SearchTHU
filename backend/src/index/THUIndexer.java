@@ -171,9 +171,12 @@ public class THUIndexer {
                 doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url_str).toArray(
                         new String[0])), Field.Store.YES));
             }
+            float pagerank = 0.0f;
             if (pagerank_scores.containsKey(url_str)) {
-                doc.add(new FeatureField("features", "pagerank", pagerank_scores.get(url_str).floatValue()));
+                pagerank = pagerank_scores.get(url_str).floatValue();
+                System.out.println(url_str + pagerank);
             }
+            doc.add(new FeatureField("features", "pagerank", pagerank));
             if (url != null) {
                 doc.add(new StringField("site", url.getHost(), Field.Store.YES));
             }

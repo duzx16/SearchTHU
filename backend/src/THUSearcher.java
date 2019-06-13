@@ -26,9 +26,9 @@ import java.util.*;
 
 
 public class THUSearcher {
-    private IndexReader reader;
+    protected IndexReader reader;
     private IndexSearcher searcher;
-    private Analyzer analyzer;
+    protected Analyzer analyzer;
     private SimpleQueryParser parser;
     private QueryParser advanced_parser;
     private Map<String, Float> field_weights = new HashMap<>();
@@ -64,6 +64,7 @@ public class THUSearcher {
         for (int i = 0; i < max_num; ++i) {
             int id = topDocs.scoreDocs[i + offset].doc;
             Document document = searcher.doc(id);
+            System.out.println(document.getFields());
             String title = document.get("title");
             String content = document.get("content");
             String url = document.get("url");
