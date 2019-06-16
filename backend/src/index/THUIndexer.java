@@ -19,12 +19,19 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.scoring.PageRank;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
 
 public class THUIndexer {
     private Analyzer analyzer;
     private IndexWriter indexWriter;
     private Map<String, Set<String>> anchorMap;
+    private Graph<String, DefaultEdge> linkGraph;
+    private Map<String, Double> pagerank_scores;
+    private String[] must_fields;
 
     public THUIndexer(String indexDir) {
         anchorMap = new HashMap<>();
@@ -41,6 +48,8 @@ public class THUIndexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        linkGraph = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+        must_fields = new String[]{"title", "content"};
     }
 
     public void indexDirectory(String dir_path, String url, boolean anchor) throws FileNotFoundException, MalformedURLException {
@@ -100,6 +109,13 @@ public class THUIndexer {
                 if (pos != -1) {
                     link = link.substring(0, pos);
                 }
+                if (!linkGraph.containsVertex(url_str)) {
+                    linkGraph.addVertex(url_str);
+                }
+                if (!linkGraph.containsVertex(link)) {
+                    linkGraph.addVertex(link);
+                }
+                linkGraph.addEdge(url_str, link);
                 if (!anchorMap.containsKey(link)) {
                     anchorMap.put(link, new HashSet<>());
                 }
@@ -108,7 +124,13 @@ public class THUIndexer {
         }
     }
 
-    private void indexJsonFile(String file_path, String url) {
+    private void indexJsonFile(String file_path, String url_str) {
+        URL url = null;
+        try {
+            url = new URL("http://" + url_str);
+        } catch (MalformedURLException e) {
+            System.out.println(url_str);
+        }
         try {
             Document doc = new Document();
             Path path = Paths.get(file_path);
@@ -121,12 +143,20 @@ public class THUIndexer {
                 System.out.println(file_path);
                 return;
             }
+            for(String key: must_fields) {
+                String text = "";
+                if(jsonObject.has(key)) {
+                    text = jsonObject.get(key).getAsString();
+                }
+                doc.add(new TextField(key, text, Field.Store.YES));
+            }
             for (final Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
                 final String key = entry.getKey();
                 final JsonElement value = entry.getValue();
                 switch (key) {
                     case "title":
                     case "content":
+                        break;
                     case "h1":
                     case "h2":
                     case "h3":
@@ -136,12 +166,21 @@ public class THUIndexer {
                         doc.add(new TextField(key, value.getAsString(), Field.Store.YES));
                         break;
                 }
-                if (anchorMap.containsKey(url)) {
-                    doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url).toArray(
-                            new String[0])), Field.Store.YES));
-                }
             }
-            doc.add(new StringField("url", url, Field.Store.YES));
+            if (anchorMap.containsKey(url_str)) {
+                doc.add(new TextField("anchor", String.join(" ", anchorMap.get(url_str).toArray(
+                        new String[0])), Field.Store.YES));
+            }
+            float pagerank = 0.0f;
+            if (pagerank_scores.containsKey(url_str)) {
+                pagerank = pagerank_scores.get(url_str).floatValue();
+                System.out.println(url_str + pagerank);
+            }
+            doc.add(new FeatureField("features", "pagerank", pagerank));
+            if (url != null) {
+                doc.add(new StringField("site", url.getHost(), Field.Store.YES));
+            }
+            doc.add(new StoredField("url", url_str));
             String file_type;
             if (file_path.endsWith(".html.json") || file_path.endsWith(".htm.json")) {
                 file_type = "html";
@@ -162,6 +201,8 @@ public class THUIndexer {
     public static void main(String[] args) throws IOException {
         THUIndexer indexer = new THUIndexer(args[1]);
         indexer.indexDirectory(args[0], "", true);
+        PageRank<String, DefaultEdge> pageRank = new PageRank<>(indexer.linkGraph);
+        indexer.pagerank_scores = pageRank.getScores();
         System.out.println("Build anchor finish");
         indexer.indexDirectory(args[0], "", false);
         indexer.indexWriter.close();
