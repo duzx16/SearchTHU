@@ -4,6 +4,7 @@ import org.apache.lucene.search.spell.LuceneDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.analysis.core.UnicodeWhitespaceAnalyzer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +18,8 @@ class SuggestResults {
 public class THUSuggester {
     private AnalyzingInfixSuggester suggester;
 
-    public THUSuggester(Directory directory, Analyzer analyzer, IndexReader reader) throws IOException {
+    public THUSuggester(Directory directory, IndexReader reader) throws IOException {
+        Analyzer analyzer = new UnicodeWhitespaceAnalyzer();
         LuceneDictionary content_dictionary = new LuceneDictionary(reader, "content");
         suggester = new AnalyzingInfixSuggester(directory, analyzer);
         suggester.build(content_dictionary.getEntryIterator());

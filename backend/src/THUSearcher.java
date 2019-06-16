@@ -7,6 +7,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FeatureField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.highlight.*;
@@ -16,7 +17,10 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.search.similarities.Similarity;
+import org.apache.lucene.search.spell.LuceneDictionary;
+import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.store.FSDirectory;
+
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,6 +37,7 @@ public class THUSearcher {
     private QueryParser advanced_parser;
     private Map<String, Float> field_weights = new HashMap<>();
     private SimpleHTMLFormatter htmlFormatter;
+    private SpellChecker spellChecker;
 
     public THUSearcher(String indexDir, Similarity similarity, String config_path) throws IOException {
         final JsonParser json_parser = new JsonParser();
@@ -52,6 +57,18 @@ public class THUSearcher {
         advanced_parser = new QueryParser("content", analyzer);
         // highlighter
         htmlFormatter = new SimpleHTMLFormatter("<span class=\"highlight\">", "</span>");
+        Path spellIndex = Paths.get("/home/duzx16/SearchTHU/spell_check");
+        spellChecker = new SpellChecker(FSDirectory.open(spellIndex));
+
+        spellChecker.indexDictionary(new LuceneDictionary(reader, "title"), new IndexWriterConfig(analyzer), true);
+        spellChecker.indexDictionary(new LuceneDictionary(reader, "anchor"), new IndexWriterConfig(analyzer), true);
+        spellChecker.indexDictionary(new LuceneDictionary(reader, "content"), new IndexWriterConfig(analyzer), true);
+
+    }
+
+    private String queryCheck(String query) throws IOException {
+        String[] results = spellChecker.suggestSimilar(query, 100);
+        return results[0];
     }
 
     private SearchResults highlightResult(Query query, TopDocs topDocs, int offset, int max_num) throws IOException {
@@ -96,10 +113,14 @@ public class THUSearcher {
     }
 
     public SearchResults searchQuery(String query_str, int offset, int max_num) throws IOException {
+        String correct = queryCheck(query_str);
         Query query = parser.parse(query_str);
         TopDocs topDocs = searcher.search(query, offset + max_num);
         query = addPageRank(query);
         SearchResults results = highlightResult(query, topDocs, offset, max_num);
+        if (!spellChecker.exist(query_str)) {
+            results.correct = correct;
+        }
         return results;
     }
 

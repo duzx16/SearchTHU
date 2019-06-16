@@ -1,6 +1,7 @@
 public class SearchResults {
     public SearchDocument[] documents;
     public int total;
+    public String correct;
 }
 
 class SearchDocument {

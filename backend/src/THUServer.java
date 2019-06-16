@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.google.gson.Gson;
@@ -27,7 +26,7 @@ public class THUServer extends HttpServlet {
         super();
         searcher = new THUSearcher(indexDir, new BM25Similarity(), "configuration.json");
         gson = new Gson();
-        suggester = new THUSuggester(FSDirectory.open(Paths.get(suggestDir)), searcher.analyzer, searcher.reader);
+        suggester = new THUSuggester(FSDirectory.open(Paths.get(suggestDir)), searcher.reader);
     }
 
     public ScoreDoc[] showList(ScoreDoc[] results, int page) {
