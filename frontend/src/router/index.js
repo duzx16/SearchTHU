@@ -19,7 +19,7 @@ export const router = new Router({
       path: '/:query/:page',
       name: 'search',
       component: Search
-    },    
+    },
     {
       path: '*',
       redirect: '/'

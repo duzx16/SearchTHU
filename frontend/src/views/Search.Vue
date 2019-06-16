@@ -17,6 +17,12 @@
           <div class="content" v-html="item.content"></div>
           <span class="url">{{ item.url }}</span>
         </div>
+        <div class="pagination">
+          <b-pagination size="md" :total-rows="total"
+            v-model="page" v-on:change="changePage" :per-page="10" limit=10 
+            hide-ellipsis=true hide-goto-end-buttons=true>
+          </b-pagination>
+        </div>
       </div>
     </b-container>
   </div>
@@ -47,6 +53,22 @@ export default {
   },
   methods: {
     async getResults () {
+      if (history.state !== null) {
+        if (history.state.page !== undefined) {
+          this.page = history.state.page
+        }
+        if (history.state.query !== undefined) {
+          this.query = history.state.query
+        }
+      }
+      history.replaceState(
+        {
+          page: this.page,
+          query: this.query
+        },
+        '', '/#/'
+      )
+
       const response = await axios.get(
         '/api/_query', {
           params: { 'query': this.query, 'page': this.page }
@@ -62,7 +84,18 @@ export default {
     goSearch () {
       this.page = 1
       this.getResults()
-    }
+    },
+    changePage (page) {
+      this.page = page
+      history.pushState(
+        {
+          page: this.page,
+          query: this.query
+        },
+        '', '/#/'
+      )
+      this.getResults()
+    },    
   },
   mounted () {
     this.getResults()
@@ -75,7 +108,7 @@ export default {
   form {
     input {
       display: inline-block;
-      width: 600px;
+      width: 685px;
       vertical-align: middle;
     }    
   }
@@ -90,7 +123,7 @@ export default {
 }
 
 .search-output {
-  width: 820px;
+  width: 900px;
 
   .document {
     margin-top: 20px;
@@ -114,6 +147,16 @@ export default {
         font-weight: bold;
         color: #c00;
       }
+    }
+  }
+
+  .pagination {
+    margin-top: 25px;
+    width: 100%;
+
+    .b-pagination {
+      width: auto;
+      margin: 0 auto;
     }
   }
 }
