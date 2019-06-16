@@ -3,10 +3,10 @@
     <header-navbar></header-navbar>
     <b-container fluid class="container-main">
       <div class="search-input">
-        <b-form @submit="goSearch">
-          <span class="title">THU Search</span>
+        <b-form @submit.prevent="goSearch">
+          <a class="title" href=".">THU Search</a>
           <b-form-input v-model="query" placeholder=""></b-form-input>
-          <b-button class="btn-run" type="submit" variant="primary">
+          <b-button class="btn-run" variant="primary" type="submit">
             Search
           </b-button>
         </b-form>
@@ -19,8 +19,8 @@
         </div>
         <div class="pagination">
           <b-pagination size="md" :total-rows="total"
-            v-model="page" v-on:change="changePage" :per-page="10" limit=10 
-            hide-ellipsis=true hide-goto-end-buttons=true>
+            v-model="page" v-on:change="changePage" :per-page="10" v-bind:limit=10
+            hide-ellipsis hide-goto-end-buttons>
           </b-pagination>
         </div>
       </div>
@@ -42,13 +42,20 @@ export default {
     }
     let page = 1
     if (this.$route.params.page !== undefined) {
-      page = parseInt(this.$route.params.query)
+      page = parseInt(this.$route.params.page)
     }
+    history.pushState(
+      {
+        query,
+        page
+      },
+      '', `/#/${query}/${page}`
+    )   
     return {
       query,
       page,
       documents: [],
-      total: 0
+      total: Math.max(10 * page, 0)
     }
   },
   methods: {
@@ -66,9 +73,8 @@ export default {
           page: this.page,
           query: this.query
         },
-        '', '/#/'
+        '', `/#/${this.query}/${this.page}`
       )
-
       const response = await axios.get(
         '/api/_query', {
           params: { 'query': this.query, 'page': this.page }
@@ -83,6 +89,13 @@ export default {
     },
     goSearch () {
       this.page = 1
+      history.pushState(
+        {
+          page: this.page,
+          query: this.query
+        },
+        '', `/#/${this.query}/${this.page}`
+      )
       this.getResults()
     },
     changePage (page) {
@@ -92,10 +105,10 @@ export default {
           page: this.page,
           query: this.query
         },
-        '', '/#/'
+        '', `/#/${this.query}/${this.page}`
       )
       this.getResults()
-    },    
+    }
   },
   mounted () {
     this.getResults()
@@ -108,7 +121,7 @@ export default {
   form {
     input {
       display: inline-block;
-      width: 685px;
+      width: 600px;
       vertical-align: middle;
     }    
   }
@@ -120,10 +133,14 @@ export default {
     color: #6b008d;
     margin-right: 10px;
   }
+
+  .title:hover {
+    text-decoration: none;
+  }
 }
 
 .search-output {
-  width: 900px;
+  width: 800px;
 
   .document {
     margin-top: 20px;
@@ -138,6 +155,7 @@ export default {
 
     .url {
       max-width: 100%;
+      font-size: 12px;
     }
 
     .content {
