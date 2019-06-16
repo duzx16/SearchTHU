@@ -57,7 +57,7 @@ public class THUSearcher {
         advanced_parser = new QueryParser("content", analyzer);
         // highlighter
         htmlFormatter = new SimpleHTMLFormatter("<span class=\"highlight\">", "</span>");
-        Path spellIndex = Paths.get("./spell_check");
+        Path spellIndex = Paths.get("/home/duzx16/SearchTHU/spell_check");
         spellChecker = new SpellChecker(FSDirectory.open(spellIndex));
 
         spellChecker.indexDictionary(new LuceneDictionary(reader, "title"), new IndexWriterConfig(analyzer), true);

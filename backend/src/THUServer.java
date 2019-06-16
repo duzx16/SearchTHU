@@ -26,7 +26,7 @@ public class THUServer extends HttpServlet {
         super();
         searcher = new THUSearcher(indexDir, new BM25Similarity(), "configuration.json");
         gson = new Gson();
-        suggester = new THUSuggester(FSDirectory.open(Paths.get(suggestDir)), searcher.analyzer, searcher.reader);
+        suggester = new THUSuggester(FSDirectory.open(Paths.get(suggestDir)), searcher.reader);
     }
 
     public ScoreDoc[] showList(ScoreDoc[] results, int page) {

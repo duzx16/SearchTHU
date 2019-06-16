@@ -48,7 +48,7 @@ public class THUIndexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        linkGraph = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+        linkGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
         must_fields = new String[]{"title", "content"};
     }
 
