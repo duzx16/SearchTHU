@@ -121,24 +121,6 @@ export default {
 </script>
 
 <style lang="scss">
-.head {
-  .logo {
-    font-family: Impact;
-    font-size: 24px;
-    vertical-align: middle;
-    color: #6b008d;
-    margin-right: 10px;
-  }
-
-  .search-input {
-    display: inline-block;
-  }
-
-  .logo:hover {
-    text-decoration: none;
-  }
-}
-
 .search-output {
   width: 800px;
 

@@ -1,8 +1,9 @@
 import Vue from 'vue'
 import BootstrapVue from 'bootstrap-vue'
 import Router from 'vue-router'
-import Search from '@/views/Search'
 import Home from '@/views/Home'
+import Search from '@/views/Search'
+import AdvancedSearch from '@/views/AdvancedSearch'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
@@ -21,6 +22,11 @@ export const router = new Router({
       name: 'search',
       component: Search
     },
+    {
+      path: '/advanced_search',
+      name: 'advanced-search',
+      component: AdvancedSearch
+    },    
     {
       path: '*',
       redirect: '/'
