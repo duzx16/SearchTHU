@@ -2,23 +2,13 @@
   <div>
     <header-navbar></header-navbar>
     <b-container fluid class="container-main">
-      <div class="search-input">
-        <b-form @submit.prevent="goSearch">
-          <a class="logo" href=".">THU Search</a>
-          <b-form-input v-model="query" placeholder="" 
-            v-on:input="autoCompletion" list="auto-completion-list">
-          </b-form-input>
-          <datalist id="auto-completion-list" autocomplete="off">
-            <option v-for="candidate in candidates" v-bind:key="candidate">
-              {{ candidate }}
-            </option>
-          </datalist>
-          <b-button class="btn-run" variant="primary" type="submit">
-            Search
-          </b-button>
-        </b-form>
+      <div class="head">
+        <a class="logo" href=".">THU Search</a>
+        <search-input class="search-input" v-on:newSearch="newSearch" ref="input">
+        </search-input>
       </div>
       <div class="search-output">
+        <div class="total">About {{ total.toLocaleString() }} results</div>
         <div class="document" v-for="item in documents" :key="item.index">
           <a class="title" v-html="item.title" v-bind:href="item.url" target="_blank"></a>
           <div class="content" v-html="item.content"></div>
@@ -37,11 +27,12 @@
 
 <script>
 import HeaderNavbar from '@/components/HeaderNavbar.vue'
+import SearchInput from '@/components/SearchInput.vue'
 import axios from 'axios'
 
 export default {
   name: 'search',
-  components: { HeaderNavbar },
+  components: { HeaderNavbar, SearchInput },
   data () {
     let query = '清华'
     if (this.$route.params.query !== undefined) {
@@ -60,10 +51,9 @@ export default {
     )   
     return {
       query,
-      queryBuffer: query,
       page,
       documents: [],
-      total: Math.max(10 * page, 0),
+      total: 0,
       candidates: []
     }
   },
@@ -75,8 +65,8 @@ export default {
         }
         if (history.state.query !== undefined) {
           this.query = history.state.query
-          this.updateCompletion(this.query)
         }
+        this.$refs.input.updateQuery(this.query)
       }
       history.replaceState(
         {
@@ -97,14 +87,15 @@ export default {
         this.documents[i].url = 'http://' + this.documents[i].url
       }
     },
-    goSearch () {
+    newSearch (query) {
+      this.query = query
       this.page = 1
       history.pushState(
         {
           page: this.page,
-          query: this.query
+          query,
         },
-        '', `/#/search/${this.query}/${this.page}`
+        '', `/#/search/${query}/${this.page}`
       )
       this.getResults()
     },
@@ -119,22 +110,6 @@ export default {
       )
       this.getResults()
     },
-    updateCompletion (query) {
-      this.queryBuffer = query
-      axios.get(
-        '/api/_completion', {
-          params: { 'query': query }
-      })
-      .then((response) => {
-        this.candidates = response.data.queries
-      })
-    },
-    autoCompletion () {
-      if (this.query === this.queryBuffer) {
-        return
-      }
-      this.updateCompletion(this.query)
-    },
     test () {
       alert('hi')
     }
@@ -146,21 +121,17 @@ export default {
 </script>
 
 <style lang="scss">
-.search-input {
-  form {
-    input {
-      display: inline-block;
-      width: 600px;
-      vertical-align: middle;
-    }    
-  }
-
+.head {
   .logo {
     font-family: Impact;
     font-size: 24px;
     vertical-align: middle;
     color: #6b008d;
     margin-right: 10px;
+  }
+
+  .search-input {
+    display: inline-block;
   }
 
   .logo:hover {
@@ -170,6 +141,12 @@ export default {
 
 .search-output {
   width: 800px;
+
+  .total {
+    font-size: 14px;
+    margin-top: 10px;
+    color: #777;
+  }
 
   .document {
     margin-top: 20px;

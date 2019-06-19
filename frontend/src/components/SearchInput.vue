@@ -47,6 +47,10 @@ export default {
         return
       }
       this.updateCompletion(this.query)
+    },
+    updateQuery (query) {
+      this.query = query
+      this.updateCompletion(query)
     }
   }
 }
