@@ -22,6 +22,24 @@ export default {
 </script>
 
 <style lang="scss">
+.head {
+  .logo {
+    font-family: Impact;
+    font-size: 24px;
+    vertical-align: middle;
+    color: #6b008d;
+    margin-right: 10px;
+  }
+
+  .search-input {
+    display: inline-block;
+  }
+
+  .logo:hover {
+    text-decoration: none;
+  }
+}
+
 .header-nav {
   position: fixed;
   top: 0;
@@ -31,7 +49,7 @@ export default {
 }
 
 .container-main {
-  padding: 15px;
+  padding: 20px 25px;
   margin-bottom: 20px;
 }
 
