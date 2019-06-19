@@ -88,14 +88,24 @@ public class THUSearcher {
             TokenStream titleTokenStream = TokenSources.getAnyTokenStream(searcher.getIndexReader(), id, "title",
                     analyzer);
             try {
-                title = highlighter.getBestFragment(titleTokenStream, title);
+                String highlight_title = highlighter.getBestFragment(titleTokenStream, title);
+                if (highlight_title != null && !highlight_title.isEmpty()) {
+                    title = highlight_title;
+                }
             } catch (InvalidTokenOffsetsException e) {
                 System.out.println(title);
             }
             TokenStream contentTokenStream = TokenSources.getAnyTokenStream(searcher.getIndexReader(), id, "content",
                     analyzer);
             try {
-                content = highlighter.getBestFragments(contentTokenStream, content, 3, "...");
+                String highlight_content = highlighter.getBestFragments(contentTokenStream, content, 3, "...");
+                if (highlight_content != null && !highlight_content.isEmpty()) {
+                    content = highlight_content;
+                } else {
+                    if (content.length() > 200) {
+                        content = content.substring(0, 200);
+                    }
+                }
             } catch (InvalidTokenOffsetsException e) {
                 System.out.println(content);
             }
