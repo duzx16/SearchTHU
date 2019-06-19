@@ -4,7 +4,7 @@
     <b-container fluid class="container-main">
       <div class="search-input">
         <b-form @submit.prevent="goSearch">
-          <a class="title" href=".">THU Search</a>
+          <a class="logo" href=".">THU Search</a>
           <b-form-input v-model="query" placeholder="" 
             v-on:input="autoCompletion" list="auto-completion-list">
           </b-form-input>
@@ -56,7 +56,7 @@ export default {
         query,
         page
       },
-      '', `/#/${query}/${page}`
+      '', `/#/search/${query}/${page}`
     )   
     return {
       query,
@@ -83,7 +83,7 @@ export default {
           page: this.page,
           query: this.query
         },
-        '', `/#/${this.query}/${this.page}`
+        '', `/#/search/${this.query}/${this.page}`
       )
       const response = await axios.get(
         '/api/_query', {
@@ -104,7 +104,7 @@ export default {
           page: this.page,
           query: this.query
         },
-        '', `/#/${this.query}/${this.page}`
+        '', `/#/search/${this.query}/${this.page}`
       )
       this.getResults()
     },
@@ -115,7 +115,7 @@ export default {
           page: this.page,
           query: this.query
         },
-        '', `/#/${this.query}/${this.page}`
+        '', `/#/search/${this.query}/${this.page}`
       )
       this.getResults()
     },
@@ -155,7 +155,7 @@ export default {
     }    
   }
 
-  .title {
+  .logo {
     font-family: Impact;
     font-size: 24px;
     vertical-align: middle;
@@ -163,7 +163,7 @@ export default {
     margin-right: 10px;
   }
 
-  .title:hover {
+  .logo:hover {
     text-decoration: none;
   }
 }

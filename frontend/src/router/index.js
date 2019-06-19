@@ -2,6 +2,7 @@ import Vue from 'vue'
 import BootstrapVue from 'bootstrap-vue'
 import Router from 'vue-router'
 import Search from '@/views/Search'
+import Home from '@/views/Home'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
@@ -12,11 +13,11 @@ export const router = new Router({
   routes: [
     {
       path: '/',
-      name: 'search',
-      component: Search
+      name: 'home',
+      component: Home
     },
     {
-      path: '/:query/:page',
+      path: '/search/:query/:page',
       name: 'search',
       component: Search
     },
