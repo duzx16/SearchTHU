@@ -68,7 +68,11 @@ public class THUSearcher {
 
     private String queryCheck(String query) throws IOException {
         String[] results = spellChecker.suggestSimilar(query, 100);
-        return results[0];
+        if (results.length > 0) {
+            return results[0];
+        } else {
+            return null;
+        }
     }
 
     private SearchResults highlightResult(Query query, TopDocs topDocs, int offset, int max_num) throws IOException {
@@ -129,7 +133,9 @@ public class THUSearcher {
         query = addPageRank(query);
         SearchResults results = highlightResult(query, topDocs, offset, max_num);
         if (!spellChecker.exist(query_str)) {
-            results.correct = correct;
+            if (correct != null) {
+                results.correct = correct;
+            }
         }
         return results;
     }
