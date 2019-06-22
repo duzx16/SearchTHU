@@ -9,6 +9,9 @@
         </search-input>
       </div>
       <div class="search-output">
+        <div class="conditions" v-if="conditions !== ''">
+          Advanced search conditions: {{ conditions }}
+        </div>        
         <div class="total" v-if="total > 0">About {{ total.toLocaleString() }} results</div>
         <div class="document" v-for="item in documents" :key="item.index">
           <a class="title" v-html="item.title" v-bind:href="item.url" target="_blank"></a>
@@ -35,7 +38,7 @@ export default {
   name: 'search',
   components: { HeaderNavbar, SearchInput },
   data () {
-    let query = '清华'
+    let query = ''
     if (this.$route.params.query !== undefined) {
       query = this.$route.params.query
     }
@@ -52,7 +55,7 @@ export default {
       type: this.$route.query.type
     }
     let advancedPath = ''
-    if (query === '(Advanced Search)') {
+    if (query.indexOf('(Advanced Search)') === 0) {
       advancedPath = '?'
       advancedPath += `exact=${advanced.exact}`
       advancedPath += `&any=${advanced.any}`
@@ -61,6 +64,25 @@ export default {
       advancedPath += `&position=${advanced.position}`
       advancedPath += `&type=${advanced.type}`
     }
+    let conditions = ''
+    if (advanced.exact !== '') {
+      conditions += ` exact: "${advanced.exact}";`
+    }
+    if (advanced.any !== '') {
+      conditions += ` any: "${advanced.any}";`
+    }
+    if (advanced.none !== '') {
+      conditions += ` none: "${advanced.none}";`
+    }
+    if (advanced.site !== '') {
+      conditions += ` site: "${advanced.site}";`
+    }
+    if (advanced.position.indexOf('any') === -1) {
+      conditions += ` position: "${advanced.position}";`
+    }
+    if (advanced.type.indexOf('any') === -1) {
+      conditions += ` type: "${advanced.type}";`
+    }    
     history.pushState(
       {
         query,
@@ -74,6 +96,7 @@ export default {
       page,
       advanced,
       advancedPath,
+      conditions,
       documents: [],
       total: 0,
       candidates: []
@@ -99,7 +122,7 @@ export default {
       //   '', `/#/search/${this.query}/${this.page}`
       // )
       let response
-      if (this.query === '(Advanced Search)') {
+      if (this.query.indexOf('(Advanced Search)') === 0) {
         let params = { 'page': this.page }
         if (this.advanced.exact !== '') {
           params['exact'] = this.advanced.exact
@@ -144,13 +167,22 @@ export default {
       }
     },
     newSearch (query) {
+      if (query === '') {
+        window.location.assign('/#/')
+        return
+      }
+      else if (query.indexOf('(Advanced Search)') === 0) {
+        this.goAdvanced()
+        return
+      }
       this.query = query
       this.page = 1
+      this.advanced = {}
       history.pushState(
         {
+          query: this.query,
           page: this.page,
-          query,
-          advanced: {}
+          advanced: this.advanced
         },
         '', `/#/search/${query}/${this.page}`
       )
@@ -201,10 +233,11 @@ export default {
 .search-output {
   width: 800px;
 
-  .total {
+  .total, .conditions {
     font-size: 14px;
     margin-top: 10px;
     color: #777;
+    max-width: 800px;
   }
 
   .document {

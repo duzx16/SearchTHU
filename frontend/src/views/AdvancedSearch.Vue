@@ -2,12 +2,12 @@
   <div>
     <header-navbar></header-navbar>
     <b-container fluid class="container-main">
-      <div class="head">
-        <a class="logo" href=".">THU Search</a>
-        <span class="advanced">Advanced Search</span>
-      </div>
-      <legend class="hint-advanced">Search with advanced conditions...</legend>
       <b-form class="form-advanced" @submit="goSearch">
+        <div class="head">
+          <a class="logo" href=".">THU Search</a>
+          <span class="advanced">Advanced Search</span>
+        </div>        
+        <legend class="hint-advanced">Search with advanced conditions...</legend>        
         <b-form-group label="This exact word or phase:" label-for="input-any" >
           <b-form-input id="input-exact" v-model="exact" type="text">
           </b-form-input>
@@ -97,13 +97,15 @@ export default {
   },
   methods: {
     goSearch () {
-      var path = '/#/search/(Advanced Search)/1/?'
+      let query = '(Advanced Search)'
+      let path = `/#/search/${query}/1/?`
       path += `exact=${this.exact}`
       path += `&any=${this.any}`
       path += `&none=${this.none}`
       path += `&site=${this.site}`
       path += `&position=${this.position}`
       path += `&type=${this.type}`
+      console.log(path)
       window.location.assign(path)
     }
   }
@@ -111,24 +113,25 @@ export default {
 </script>
 
 <style lang="scss">
-.head {
-  .advanced {
-    vertical-align: middle;
-    font-weight: bold;
-    font-size: 20px;
-    color: #6b008d;
-    margin-left: 10px;
-  }
-}
-
-.hint-advanced {
-  font-size: 18px;
-  margin-top: 10px;
-}
-
 .form-advanced {
   width: 800px;
+  margin: 0 auto;
   margin-top: 10px;
+
+  .head {
+    .advanced {
+      vertical-align: middle;
+      font-weight: bold;
+      font-size: 20px;
+      color: #6b008d;
+      margin-left: 10px;
+    }
+  }
+
+  .hint-advanced {
+    font-size: 18px;    
+    margin-top: 10px;
+  }  
 
   .btn-box {
     text-align: right;
