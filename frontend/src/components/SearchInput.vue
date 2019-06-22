@@ -1,7 +1,7 @@
 <template>
     <div class="search-input">
         <b-form @submit.prevent="goSearch">
-            <b-form-input v-model="query" placeholder="" 
+            <b-form-input v-model="query" placeholder=""
             v-on:input="autoCompletion" list="auto-completion-list">
             </b-form-input>
             <datalist id="auto-completion-list" autocomplete="off">
@@ -14,7 +14,7 @@
             </b-button>
             <b-button variant="primary" v-on:click="goAdvanced">
                 Advanced
-            </b-button>            
+            </b-button>
         </b-form>
     </div>
 </template>
@@ -43,10 +43,10 @@ export default {
       axios.get(
         '/api/_completion', {
           params: { 'query': query }
-      })
-      .then((response) => {
-        this.candidates = response.data.queries
-      })
+        })
+        .then((response) => {
+          this.candidates = response.data.queries
+        })
     },
     autoCompletion () {
       if (this.query === this.queryBuffer) {
@@ -69,7 +69,7 @@ export default {
       display: inline-block;
       width: 500px;
       vertical-align: middle;
-    }    
+    }
   }
 }
 </style>

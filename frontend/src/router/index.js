@@ -26,7 +26,7 @@ export const router = new Router({
       path: '/advanced_search',
       name: 'advanced-search',
       component: AdvancedSearch
-    },    
+    },
     {
       path: '*',
       redirect: '/'

@@ -13,12 +13,27 @@
           Advanced search conditions: {{ conditions }}
         </div>        
         <div class="total" v-if="total > 0">About {{ total.toLocaleString() }} results</div>
+        <div class="no-result" v-if="total === 0 && !init">No matched document.</div>
+        <div class="correct" v-if="correct !== ''">
+          Showing results for <span>{{ correct }}</span>. 
+          Or search for 
+          <a v-on:click="searchWithoutCheck" href="javascript:;">
+            {{ query }}
+          </a> 
+          instead
+        </div>
+        <div class="suggestion" v-if="suggestion !== ''">
+          Did you mean:
+          <a v-on:click="takeSuggestion" href="javascript:;">
+            {{ suggestion }}
+          </a> 
+        </div>        
         <div class="document" v-for="item in documents" :key="item.index">
           <a class="title" v-html="item.title" v-bind:href="item.url" target="_blank"></a>
           <div class="content" v-html="item.content"></div>
           <span class="url">{{ item.url }}</span>
         </div>
-        <div class="pagination">
+        <div class="pagination" v-if="total > 0">
           <b-pagination size="md" :total-rows="total"
             v-model="page" v-on:change="changePage" :per-page="10" v-bind:limit=10
             hide-ellipsis hide-goto-end-buttons>
@@ -54,35 +69,46 @@ export default {
       position: this.$route.query.position,
       type: this.$route.query.type
     }
-    let advancedPath = ''
+    let advancedPath = '', conditions = ''
     if (query.indexOf('(Advanced Search)') === 0) {
       advancedPath = '?'
-      advancedPath += `exact=${advanced.exact}`
-      advancedPath += `&any=${advanced.any}`
-      advancedPath += `&none=${advanced.none}`
-      advancedPath += `&site=${advanced.site}`
-      advancedPath += `&position=${advanced.position}`
-      advancedPath += `&type=${advanced.type}`
+      if (advanced.exact !== undefined) {
+        advancedPath += `exact=${advanced.exact}`
+        if (advancedadvanced.exact !== '') {
+          conditions += ` exact: "${advanced.exact}";`
+        }        
+      }
+      if (advanced.any !== undefined) {
+        advancedPath += `&any=${advanced.any}`
+        if (advanced.any !== '') {
+          conditions += ` any: "${advanced.any}";`
+        }        
+      }
+      if (advanced.none !== undefined) {
+        advancedPath += `&none=${advanced.none}`
+        if (advanced.none !== '') {
+          conditions += ` none: "${advanced.none}";`
+        }        
+      }
+      if (advanced.site !== undefined) {
+        advancedPath += `&site=${advanced.site}`
+        if (advanced.site !== '') {
+          conditions += ` site: "${advanced.site}";`
+        }        
+      }
+      if (advanced.position !== undefined) {
+        advancedPath += `&position=${advanced.position}`
+        if (advanced.position.indexOf('any') === -1) {
+          conditions += ` position: "${advanced.position}";`
+        }        
+      }
+      if (advanced.type !== undefined) {
+        advancedPath += `&type=${advanced.type}`
+        if (advanced.type.indexOf('any') === -1) {
+          conditions += ` type: "${advanced.type}";`
+        }            
+      }
     }
-    let conditions = ''
-    if (advanced.exact !== '') {
-      conditions += ` exact: "${advanced.exact}";`
-    }
-    if (advanced.any !== '') {
-      conditions += ` any: "${advanced.any}";`
-    }
-    if (advanced.none !== '') {
-      conditions += ` none: "${advanced.none}";`
-    }
-    if (advanced.site !== '') {
-      conditions += ` site: "${advanced.site}";`
-    }
-    if (advanced.position.indexOf('any') === -1) {
-      conditions += ` position: "${advanced.position}";`
-    }
-    if (advanced.type.indexOf('any') === -1) {
-      conditions += ` type: "${advanced.type}";`
-    }    
     history.pushState(
       {
         query,
@@ -99,7 +125,11 @@ export default {
       conditions,
       documents: [],
       total: 0,
-      candidates: []
+      candidates: [],
+      init: true,
+      correct: '',
+      suggestion: '',
+      check: true,
     }
   },
   methods: {
@@ -123,7 +153,7 @@ export default {
       // )
       let response
       if (this.query.indexOf('(Advanced Search)') === 0) {
-        let params = { 'page': this.page }
+        let params = { 'page': this.page }        
         if (this.advanced.exact !== '') {
           params['exact'] = this.advanced.exact
         }
@@ -151,12 +181,26 @@ export default {
         response = await axios.get('/api/_advanced_query', {
           params
         })
+        this.correct = ''
       }
       else {
         response = await axios.get(
           '/api/_query', {
             params: { 'query': this.query, 'page': this.page }
         })
+        if (this.check && response.data.correct !== undefined) {
+          this.correct = response.data.correct
+          response = await axios.get(
+            '/api/_query', {
+              params: { 'query': this.correct, 'page': this.page }
+          })
+        }
+        else {
+          this.correct = ''
+          if (response.data.correct !== undefined) {
+            this.suggestion = response.data.correct
+          }
+        }
       }
       console.log(response)
       this.documents = response.data.documents
@@ -165,6 +209,7 @@ export default {
         this.documents[i].index = i
         this.documents[i].url = 'http://' + this.documents[i].url
       }
+      this.init = false
     },
     newSearch (query) {
       if (query === '') {
@@ -186,6 +231,17 @@ export default {
         },
         '', `/#/search/${query}/${this.page}`
       )
+      this.check = true
+      this.getResults()
+    },
+    searchWithoutCheck () {
+      this.check = false
+      this.getResults()
+    },
+    takeSuggestion () {
+      this.check = true
+      this.query = this.suggestion
+      this.suggestion = ''
       this.getResults()
     },
     goAdvanced () {
@@ -238,6 +294,24 @@ export default {
     margin-top: 10px;
     color: #777;
     max-width: 800px;
+  }
+
+  .no-result {
+    margin-top: 10px;
+  }
+
+  .correct {
+    margin-top: 5px;
+
+    span, a {
+      font-weight: bold;
+    }
+  }
+
+  .suggestion {
+    a {
+      font-weight: bold;
+    }
   }
 
   .document {

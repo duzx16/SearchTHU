@@ -105,7 +105,6 @@ export default {
       path += `&site=${this.site}`
       path += `&position=${this.position}`
       path += `&type=${this.type}`
-      console.log(path)
       window.location.assign(path)
     }
   }
