@@ -208,6 +208,9 @@ export default {
       for (let i = 0; i < this.documents.length; ++i) {
         this.documents[i].index = i
         this.documents[i].url = 'http://' + this.documents[i].url
+        if (this.documents[i].title === '' && this.documents[i].content.length > 0) {
+          this.documents[i].title = this.documents[i].content.split(' ')[0]
+        }
       }
       this.init = false
     },
@@ -332,6 +335,8 @@ export default {
 
     .content {
       font-size: 14px;
+      max-width: 800px;
+      overflow-wrap: break-word;
 
       .highlight {
         font-weight: bold;
