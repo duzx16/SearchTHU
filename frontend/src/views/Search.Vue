@@ -8,7 +8,7 @@
         </search-input>
       </div>
       <div class="search-output">
-        <div class="total">About {{ total.toLocaleString() }} results</div>
+        <div class="total" v-if="total > 0">About {{ total.toLocaleString() }} results</div>
         <div class="document" v-for="item in documents" :key="item.index">
           <a class="title" v-html="item.title" v-bind:href="item.url" target="_blank"></a>
           <div class="content" v-html="item.content"></div>
@@ -42,16 +42,37 @@ export default {
     if (this.$route.params.page !== undefined) {
       page = parseInt(this.$route.params.page)
     }
+    let advanced = {
+      exact: this.$route.query.exact,
+      any: this.$route.query.any,
+      none: this.$route.query.none,
+      site: this.$route.query.site,
+      position: this.$route.query.position,
+      type: this.$route.query.type
+    }
+    let advancedPath = ''
+    if (query === '(Advanced Search)') {
+      advancedPath = '?'
+      advancedPath += `exact=${advanced.exact}`
+      advancedPath += `&any=${advanced.any}`
+      advancedPath += `&none=${advanced.none}`
+      advancedPath += `&site=${advanced.site}`
+      advancedPath += `&position=${advanced.position}`
+      advancedPath += `&type=${advanced.type}`
+    }
     history.pushState(
       {
         query,
-        page
+        page,
+        advanced
       },
-      '', `/#/search/${query}/${page}`
+      '', `/#/search/${query}/${page}${advancedPath}`
     )   
     return {
       query,
       page,
+      advanced,
+      advancedPath,
       documents: [],
       total: 0,
       candidates: []
@@ -59,26 +80,48 @@ export default {
   },
   methods: {
     async getResults () {
-      if (history.state !== null) {
-        if (history.state.page !== undefined) {
-          this.page = history.state.page
+      this.$refs.input.updateQuery(this.query)
+      // if (history.state !== null) {
+      //   if (history.state.page !== undefined) {
+      //     this.page = history.state.page
+      //   }
+      //   if (history.state.query !== undefined) {
+      //     this.query = history.state.query
+      //   }
+      //   this.$refs.input.updateQuery(this.query)
+      // }
+      // history.replaceState(
+      //   {
+      //     page: this.page,
+      //     query: this.query
+      //   },
+      //   '', `/#/search/${this.query}/${this.page}`
+      // )
+      let response
+      if (this.query === '(Advanced Search)') {
+        let params = { 'page': this.page }
+        if (this.advanced.exact !== '') {
+          params['exact'] = this.advanced.exact
         }
-        if (history.state.query !== undefined) {
-          this.query = history.state.query
+        if (this.advanced.any !== '') {
+          params['any'] = this.advanced.any
         }
-        this.$refs.input.updateQuery(this.query)
+        if (this.advanced.none !== '') {
+          params['none'] = this.advanced.none
+        }
+        if (this.advanced.site !== '') {
+          params['site'] = this.advanced.site
+        }                
+        response = await axios.get('/api/_advanced_query', {
+          params
+        })
       }
-      history.replaceState(
-        {
-          page: this.page,
-          query: this.query
-        },
-        '', `/#/search/${this.query}/${this.page}`
-      )
-      const response = await axios.get(
-        '/api/_query', {
-          params: { 'query': this.query, 'page': this.page }
-      })
+      else {
+        response = await axios.get(
+          '/api/_query', {
+            params: { 'query': this.query, 'page': this.page }
+        })
+      }
       console.log(response)
       this.documents = response.data.documents
       this.total = response.data.total
@@ -94,6 +137,7 @@ export default {
         {
           page: this.page,
           query,
+          advanced: {}
         },
         '', `/#/search/${query}/${this.page}`
       )
@@ -104,14 +148,12 @@ export default {
       history.pushState(
         {
           page: this.page,
-          query: this.query
+          query: this.query,
+          advanced: this.advanced
         },
-        '', `/#/search/${this.query}/${this.page}`
+        '', `/#/search/${this.query}/${this.page}${this.advancedPath}`
       )
       this.getResults()
-    },
-    test () {
-      alert('hi')
     }
   },
   mounted () {

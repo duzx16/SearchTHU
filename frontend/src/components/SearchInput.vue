@@ -9,9 +9,12 @@
                 {{ candidate }}
             </option>
             </datalist>
-            <b-button class="btn-run" variant="primary" type="submit">
+            <b-button variant="primary" type="submit">
                 Search
             </b-button>
+            <b-button variant="primary" v-on:click="goAdvanced">
+                Advanced
+            </b-button>            
         </b-form>
     </div>
 </template>
@@ -30,7 +33,10 @@ export default {
   },
   methods: {
     goSearch () {
-        this.$emit('newSearch', this.query)
+      this.$emit('newSearch', this.query)
+    },
+    goAdvanced () {
+      this.$emit('goAdvanced')
     },
     updateCompletion (query) {
       this.queryBuffer = query
@@ -61,7 +67,7 @@ export default {
   form {
     input {
       display: inline-block;
-      width: 600px;
+      width: 500px;
       vertical-align: middle;
     }    
   }

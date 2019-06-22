@@ -7,7 +7,7 @@
         <span class="advanced">Advanced Search</span>
       </div>
       <legend class="hint-advanced">Search with advanced conditions...</legend>
-      <b-form class="form-advanced">
+      <b-form class="form-advanced" @submit="goSearch">
         <b-form-group label="This exact word or phase:" label-for="input-any" >
           <b-form-input id="input-exact" v-model="exact" type="text">
           </b-form-input>
@@ -21,7 +21,7 @@
           </b-form-input>
         </b-form-group>  
         <b-form-group label="Site:" label-for="input-site" >
-          <b-form-input id="input-site" v-model="none" type="text">
+          <b-form-input id="input-site" v-model="site" type="text">
           </b-form-input>
         </b-form-group>              
         <b-form-group label="Terms appearing:" label-for="input-position" >
@@ -72,6 +72,16 @@ export default {
     }
   },
   methods: {
+    goSearch () {
+      var path = '/#/search/(Advanced Search)/1/?'
+      path += `exact=${this.exact}`
+      path += `&any=${this.any}`
+      path += `&none=${this.none}`
+      path += `&site=${this.site}`
+      path += `&position=${this.position}`
+      path += `&type=${this.type}`
+      window.location.assign(path)
+    }
   }
 }
 </script>
