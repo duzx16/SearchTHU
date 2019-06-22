@@ -52,13 +52,13 @@ export default {
       'anywhere in the page',
       'in the title of the page',
       'in the content of the page',
-      'in the URL of the page'
+      'in the URL (link) of the page'
     ]
     const optionsType = [
       'any format',
       'general web page (.html)',
       'Adobe Acrobat PDF (.pdf)',
-      'Microsoft Word (.doc/.docx)'
+      'Microsoft Word (.doc/docx)'
     ]
     return {
       exact: '',

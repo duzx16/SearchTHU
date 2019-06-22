@@ -49,7 +49,6 @@ export default {
     }
   },
   mounted () {
-    // this.getResults()
   }
 }
 </script>

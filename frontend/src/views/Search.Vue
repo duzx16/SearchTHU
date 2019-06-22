@@ -112,6 +112,18 @@ export default {
         if (this.advanced.site !== '') {
           params['site'] = this.advanced.site
         }                
+        const positionOptions = ['any', 'title', 'content', 'link']
+        for (let i = 0; i < positionOptions.length; ++i) {
+          if (this.advanced.position.indexOf(positionOptions[i]) !== -1) {
+            params['position'] = positionOptions[i]
+          }
+        }
+        const typeOptions = ['any', 'html', 'pdf', 'doc/docx']
+        for (let i = 0; i < typeOptions.length; ++i) {
+          if (this.advanced.type.indexOf(typeOptions[i]) !== -1) {
+            params['file_type'] = typeOptions[i]
+          }
+        }
         response = await axios.get('/api/_advanced_query', {
           params
         })
