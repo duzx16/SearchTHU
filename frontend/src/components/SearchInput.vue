@@ -2,7 +2,7 @@
     <div class="search-input">
         <b-form @submit.prevent="goSearch">
             <b-form-input v-model="query" placeholder=""
-            v-on:input="autoCompletion" list="auto-completion-list">
+              v-on:input="autoCompletion" list="auto-completion-list">
             </b-form-input>
             <datalist id="auto-completion-list" autocomplete="off">
             <option v-for="candidate in candidates" v-bind:key="candidate">

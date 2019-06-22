@@ -74,7 +74,7 @@ export default {
       advancedPath = '?'
       if (advanced.exact !== undefined) {
         advancedPath += `exact=${advanced.exact}`
-        if (advancedadvanced.exact !== '') {
+        if (advanced.exact !== '') {
           conditions += ` exact: "${advanced.exact}";`
         }        
       }
@@ -178,6 +178,7 @@ export default {
             params['file_type'] = typeOptions[i]
           }
         }
+        console.log(params)
         response = await axios.get('/api/_advanced_query', {
           params
         })
@@ -188,7 +189,8 @@ export default {
           '/api/_query', {
             params: { 'query': this.query, 'page': this.page }
         })
-        if (this.check && response.data.correct !== undefined) {
+        if (this.check && response.data.documents.length === 0  && 
+            response.data.correct !== undefined) {
           this.correct = response.data.correct
           response = await axios.get(
             '/api/_query', {
@@ -197,7 +199,7 @@ export default {
         }
         else {
           this.correct = ''
-          if (response.data.correct !== undefined) {
+          if (response.data.documents.length === 0 && response.data.correct !== undefined) {
             this.suggestion = response.data.correct
           }
         }
@@ -209,7 +211,13 @@ export default {
         this.documents[i].index = i
         this.documents[i].url = 'http://' + this.documents[i].url
         if (this.documents[i].title === '' && this.documents[i].content.length > 0) {
-          this.documents[i].title = this.documents[i].content.split(' ')[0]
+          let contentWords = this.documents[i].content.split(' ')
+          for (let j = 0; j < contentWords.length; ++j) {
+            if (contentWords[j] !== '' && contentWords[j].length > 1) {
+              this.documents[i].title = contentWords[j]
+              break
+            }
+          }
         }
       }
       this.init = false
