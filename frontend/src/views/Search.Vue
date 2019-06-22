@@ -198,6 +198,7 @@ export default {
         }
         else {
           this.correct = ''
+          this.suggestion = ''
           if (response.data.correct !== undefined && 
               response.data.correct !== this.query) {
             this.suggestion = response.data.correct
@@ -258,6 +259,7 @@ export default {
     takeSuggestion () {
       this.check = true
       this.query = this.suggestion
+      this.page = 1
       this.suggestion = ''
       this.getResults()
     },
