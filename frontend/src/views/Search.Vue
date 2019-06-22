@@ -4,7 +4,8 @@
     <b-container fluid class="container-main">
       <div class="head">
         <a class="logo" href=".">THU Search</a>
-        <search-input class="search-input" v-on:newSearch="newSearch" ref="input">
+        <search-input class="search-input" 
+          v-on:newSearch="newSearch" v-on:goAdvanced="goAdvanced" ref="input">
         </search-input>
       </div>
       <div class="search-output">
@@ -154,6 +155,28 @@ export default {
         '', `/#/search/${query}/${this.page}`
       )
       this.getResults()
+    },
+    goAdvanced () {
+      var path = '/#/advanced_search?'
+      if (this.advanced.exact !== undefined) {
+        path += `&exact=${this.advanced.exact}`
+      }
+      if (this.advanced.any !== undefined) {
+        path += `&any=${this.advanced.any}`
+      }
+      if (this.advanced.none !== undefined) {
+        path += `&none=${this.advanced.none}`
+      }
+      if (this.advanced.site !== undefined) {
+        path += `&site=${this.advanced.site}`
+      }
+      if (this.advanced.position !== undefined) {
+        path += `&position=${this.advanced.position}`
+      }
+      if (this.advanced.type !== undefined) {
+        path += `&type=${this.advanced.type}`
+      }
+      window.location.assign(path)
     },
     changePage (page) {
       this.page = page

@@ -60,15 +60,39 @@ export default {
       'Adobe Acrobat PDF (.pdf)',
       'Microsoft Word (.doc/docx)'
     ]
+    let exact = ''
+    if (this.$route.query.exact !== undefined) {
+      exact = this.$route.query.exact
+    }
+    let any = ''
+    if (this.$route.query.any !== undefined) {
+      any = this.$route.query.any
+    }
+    let none = ''
+    if (this.$route.query.none !== undefined) {
+      none = this.$route.query.none
+    }    
+    let site = ''
+    if (this.$route.query.site !== undefined) {
+      site = this.$route.query.site
+    }    
+    let position = optionsPosition[0]
+    if (this.$route.query.position !== undefined) {
+      position = this.$route.query.position
+    }    
+    let type = optionsType[0]
+    if (this.$route.query.type !== undefined) {
+      type = this.$route.query.type
+    }    
     return {
-      exact: '',
-      any: '',
-      none: '',
-      site: '', // TODO: check format
+      exact,
+      any,
+      none,
+      site, // TODO: check format
+      position,
+      type,
       optionsPosition,
-      optionsType,
-      position: optionsPosition[0],
-      type: optionsType[0],
+      optionsType
     }
   },
   methods: {
