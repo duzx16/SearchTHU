@@ -178,7 +178,6 @@ export default {
             params['file_type'] = typeOptions[i]
           }
         }
-        console.log(params)
         response = await axios.get('/api/_advanced_query', {
           params
         })
@@ -199,7 +198,8 @@ export default {
         }
         else {
           this.correct = ''
-          if (response.data.documents.length === 0 && response.data.correct !== undefined) {
+          if (response.data.correct !== undefined && 
+              response.data.correct !== this.query) {
             this.suggestion = response.data.correct
           }
         }
