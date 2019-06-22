@@ -97,6 +97,12 @@ export default {
   },
   methods: {
     goSearch () {
+      if (this.exact === '' && this.any === '' && this.none === '' && 
+          this.site === '' && this.position == this.optionsPosition[0] &&
+          this.type == this.optionsType[0]) {
+        window.location.assign('/#/')
+        return      
+      }
       let query = '(Advanced Search)'
       let path = `/#/search/${query}/1/?`
       path += `exact=${this.exact}`

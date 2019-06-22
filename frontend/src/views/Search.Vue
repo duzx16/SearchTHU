@@ -205,6 +205,12 @@ export default {
         }
       }
       console.log(response)
+      if (response.data === null) {
+        response.data = {
+          documents: [],
+          total: 0
+        }
+      }
       this.documents = response.data.documents
       this.total = response.data.total
       for (let i = 0; i < this.documents.length; ++i) {
