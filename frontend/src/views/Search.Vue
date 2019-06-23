@@ -192,21 +192,31 @@ export default {
           total: 0
         }
       }
-      this.documents = response.data.documents
+      let documents = []
       this.total = response.data.total
-      for (let i = 0; i < this.documents.length; ++i) {
-        this.documents[i].index = i
-        this.documents[i].url = 'http://' + this.documents[i].url
-        if (this.documents[i].title === '' && this.documents[i].content.length > 0) {
-          let contentWords = this.documents[i].content.split(' ')
+      for (let i = 0; i < response.data.documents.length; ++i) {
+        let doc = response.data.documents[i]
+        doc.index = i
+        doc.url = 'http://' + doc.url
+        if (doc.title === '' && doc.content.length > 0) {
+          let contentWords = doc.content.split(' ')
           for (let j = 0; j < contentWords.length; ++j) {
+            if (contentWords[j].indexOf('<') !== -1 ||
+                contentWords[j].indexOf('=') !== -1 || 
+                contentWords[j].indexOf('>') !== -1) {
+              continue
+            }
             if (contentWords[j] !== '' && contentWords[j].length > 1) {
-              this.documents[i].title = contentWords[j]
+              doc.title = contentWords[j]
               break
             }
           }
         }
+        if (doc.title !== '') {
+          documents.push(doc)
+        }
       }
+      this.documents = documents
       this.init = false
       window.scrollTo(0, 0)    
     },
