@@ -69,45 +69,37 @@ export default {
       position: this.$route.query.position,
       type: this.$route.query.type
     }
-    let advancedPath = '', conditions = ''
+    let advancedPath = '?', conditions = ''
     if (query.indexOf('(Advanced Search)') === 0) {
-      advancedPath = '?'
-      if (advanced.exact !== undefined) {
-        advancedPath += `exact=${advanced.exact}`
-        if (advanced.exact !== '') {
-          conditions += ` exact: "${advanced.exact}";`
-        }        
+      advancedPath += '?'
+      if (advanced.exact !== undefined && advanced.exact !== '') {
+        conditions += ` exact: "${advanced.exact}";`
+        advancedPath += `&exact=${advanced.exact}`
       }
-      if (advanced.any !== undefined) {
+      if (advanced.any !== undefined && advanced.any !== '') {
+        conditions += ` any: "${advanced.any}";`
         advancedPath += `&any=${advanced.any}`
-        if (advanced.any !== '') {
-          conditions += ` any: "${advanced.any}";`
-        }        
       }
-      if (advanced.none !== undefined) {
+      if (advanced.none !== undefined && advanced.none !== '') {
+        conditions += ` none: "${advanced.none}";`
         advancedPath += `&none=${advanced.none}`
-        if (advanced.none !== '') {
-          conditions += ` none: "${advanced.none}";`
-        }        
       }
-      if (advanced.site !== undefined) {
+      if (advanced.site !== undefined && advanced.site !== '') {
+        conditions += ` site: "${advanced.site}";`
         advancedPath += `&site=${advanced.site}`
-        if (advanced.site !== '') {
-          conditions += ` site: "${advanced.site}";`
-        }        
       }
-      if (advanced.position !== undefined) {
+      if (advanced.position !== undefined && advanced.position.indexOf('any') === -1) {
+        conditions += ` position: "${advanced.position}";`
         advancedPath += `&position=${advanced.position}`
-        if (advanced.position.indexOf('any') === -1) {
-          conditions += ` position: "${advanced.position}";`
-        }        
       }
-      if (advanced.type !== undefined) {
+      if (advanced.type !== undefined && advanced.type.indexOf('any') === -1) {
+        conditions += ` type: "${advanced.type}";`
         advancedPath += `&type=${advanced.type}`
-        if (advanced.type.indexOf('any') === -1) {
-          conditions += ` type: "${advanced.type}";`
-        }            
       }
+    }
+    let check = true
+    if (this.$route.query.nocheck !== undefined) {
+      check = false
     }
     history.pushState(
       {
@@ -116,42 +108,26 @@ export default {
         advanced
       },
       '', `/#/search/${query}/${page}${advancedPath}`
-    )   
+    )      
     return {
       query,
       page,
       advanced,
       advancedPath,
       conditions,
+      check,      
       documents: [],
       total: 0,
       candidates: [],
       init: true,
       correct: '',
       suggestion: '',
-      check: true,
     }
   },
   methods: {
     async getResults () {
-      this.$refs.input.updateQuery(this.query)
-      // if (history.state !== null) {
-      //   if (history.state.page !== undefined) {
-      //     this.page = history.state.page
-      //   }
-      //   if (history.state.query !== undefined) {
-      //     this.query = history.state.query
-      //   }
-      //   this.$refs.input.updateQuery(this.query)
-      // }
-      // history.replaceState(
-      //   {
-      //     page: this.page,
-      //     query: this.query
-      //   },
-      //   '', `/#/search/${this.query}/${this.page}`
-      // )
       let response
+      this.$refs.input.updateQuery(this.query)
       if (this.query.indexOf('(Advanced Search)') === 0) {
         let params = { 'page': this.page }        
         if (this.advanced.exact !== '') {
@@ -228,6 +204,7 @@ export default {
         }
       }
       this.init = false
+      window.scrollTo(0, 0)    
     },
     newSearch (query) {
       if (query === '') {
@@ -238,30 +215,15 @@ export default {
         this.goAdvanced()
         return
       }
-      this.query = query
-      this.page = 1
-      this.advanced = {}
-      history.pushState(
-        {
-          query: this.query,
-          page: this.page,
-          advanced: this.advanced
-        },
-        '', `/#/search/${query}/${this.page}`
-      )
-      this.check = true
-      this.getResults()
+      else {
+        window.location.assign(`/#/search/${query}/1`)
+      }
     },
     searchWithoutCheck () {
-      this.check = false
-      this.getResults()
+      window.location.assign(`/#/search/${this.query}/1${this.advancedPath}?nocheck`)
     },
     takeSuggestion () {
-      this.check = true
-      this.query = this.suggestion
-      this.page = 1
-      this.suggestion = ''
-      this.getResults()
+      window.location.assign(`/#/search/${this.suggestion}/1${this.advancedPath}`)
     },
     goAdvanced () {
       var path = '/#/advanced_search?'
@@ -286,20 +248,18 @@ export default {
       window.location.assign(path)
     },
     changePage (page) {
-      this.page = page
-      history.pushState(
-        {
-          page: this.page,
-          query: this.query,
-          advanced: this.advanced
-        },
-        '', `/#/search/${this.query}/${this.page}${this.advancedPath}`
-      )
-      this.getResults()
+      window.location.assign(`/#/search/${this.query}/${page}${this.advancedPath}`)
     }
   },
   mounted () {
     this.getResults()
+  },
+  beforeRouteUpdate (to, from, next) {
+    this.query = to.params.query
+    this.page = parseInt(to.params.page)
+    this.advanced = to.query
+    this.getResults()
+    next()
   }
 }
 </script>

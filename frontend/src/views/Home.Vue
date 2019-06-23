@@ -43,12 +43,7 @@ export default {
         return
       }
       this.updateCompletion(this.query)
-    },
-    test () {
-      alert('hi')
     }
-  },
-  mounted () {
   }
 }
 </script>
