@@ -83,6 +83,9 @@ public class THUIndexer {
         } catch (IllegalStateException e) {
             System.out.println(file_path);
             return;
+        } catch (FileNotFoundException e) {
+            System.out.println("Can't open " + file_path);
+            return;
         }
         if (jsonObject.has("links")) {
             JsonArray links = jsonObject.getAsJsonArray("links");
