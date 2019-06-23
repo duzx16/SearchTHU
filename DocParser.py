@@ -26,7 +26,7 @@ progress_bar = ProgressBar()
 
 
 class DocParser:
-    def __init__(self, to_tokenize=False):
+    def __init__(self, to_tokenize=True):
         self.to_tokenize = to_tokenize
         if self.to_tokenize:
             self.tokenizer = JiebaTokenizer()
@@ -52,6 +52,12 @@ class DocParser:
             if type != 0: is_english = False
             if type != 1: is_chinese = False
         return is_english or is_chinese
+
+    def strip(self, str):
+        str = str.replace("\n", " ")        
+        while str.find("  ") != -1:
+            str = str.replace("  ", " ")
+        return str
 
     def tokenize(self, str):
         if self.to_tokenize:
@@ -118,13 +124,12 @@ class DocParserHtml(DocParser):
                     "text": a.text,
                     "text_seg": self.tokenize(a.text)
                 })
-
-        content_tags = ["p", "span"]
+        
+        body = soup.find("body")
         res["content"], res["content_seg"] = "", ""
-        for tag in content_tags:
-            for item in soup.find_all(tag):
-                res["content"] += item.text + " "
-                res["content_seg"] += self.tokenize(item.text) + " "
+        if body is not None:
+            res["content"] = self.strip(body.text)
+            res["content_seg"] = self.tokenize(res["content"])
 
         return res
 

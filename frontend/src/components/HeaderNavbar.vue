@@ -1,21 +1,13 @@
 <template>
   <header class="header-nav">
-    <!-- <b-navbar toggleable="md" type="dark" variant="info">
-      <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
-      <b-navbar-brand href="/">{{ appName }}</b-navbar-brand>
-    </b-navbar> -->
   </header>
 </template>
 
 <script>
 export default {
   name: 'header-navbar',
-  props: {
-    atTask: Boolean
-  },
   data () {
     return {
-      appName: 'THU Search'
     }
   }
 }
@@ -49,7 +41,7 @@ export default {
 }
 
 .container-main {
-  padding: 20px 25px;
+  padding: 20px 50px;
   margin-bottom: 20px;
 }
 
