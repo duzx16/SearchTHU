@@ -8,14 +8,12 @@
 
 * Body
 
-  ```json
+  ```
   {
     "query": query字符串
     "page": 当前的页数，大于等于1
   }
-  ```
-
-  
+  ```  
 
 * Success Response
 
@@ -23,7 +21,7 @@
 
   * Content:
 
-    ```json
+    ```
     {
       "total": total number of ducuments matching the query,
       "correct": optional, 如果可以进行查询纠正则为纠正后的字符串,
@@ -38,7 +36,7 @@
 * Document:
 > 这里的title和content都用highlighter做了高亮处理，其中的部分文字使用\<span class="highlight"\>...\</span\>标明
 
-  ```json
+  ```
   {
     // title and abstract might be HTML code to show hightlight
     "title": the title of the page,
@@ -57,9 +55,9 @@
 
 * Body
 
-  ```json
+  ```
   {
-  	//at least one of these domains must be non-empty
+    //at least one of these domains must be non-empty
     "exact":
   	"any": 
   	"none":
@@ -91,9 +89,9 @@
 
 * Success Response
 
-  ```json
+  ```
   {
-  	"queries": [
+    "queries": [
       complete query1, // string of query
       ...
     ]
