@@ -1,5 +1,7 @@
 # SearchTHU
 
+Source code of the course project for Fundamentals of Search Engine Technology in Tsinghua University by Zhengxiao Du and Zhouxing Shi.
+
 ## Requirements
 
 * Python 3.5+
@@ -31,7 +33,7 @@ For each file with path `<path>`, it outputs a processed JSON file `<path>.json`
 
 Put `out/artifacts/SearchTHU_war/SearchTHU_war.war` at `webapps/` of the Tomcat directory, and then start the Tomcat service.
 
-The API path is http://hostname:port/SearchTHU_war/. See the API details at `doc/api.md`.
+The API path is http://hostname:port/SearchTHU_war/. See the API details at [`doc/api.md`](doc/api.md).
 
 ### Frontend
 
