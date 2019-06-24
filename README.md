@@ -31,7 +31,9 @@ For each file with path `<path>`, it outputs a processed JSON file `<path>.json`
 
 ### Backend
 
-Put `out/artifacts/SearchTHU_war/SearchTHU_war.war` at `webapps/` of the Tomcat directory, and then start the Tomcat service.
+First build the index by running `java -jar backend/out/artifacts/Indexer_jar/SearchTHU.jar <data_dir> <index_dir>`
+
+Then put `backend/out/artifacts/SearchTHU_war/SearchTHU_war.war` at `webapps/` of the Tomcat directory, and then start the Tomcat service.
 
 The API path is http://hostname:port/SearchTHU_war/. See the API details at [`doc/api.md`](doc/api.md).
 
