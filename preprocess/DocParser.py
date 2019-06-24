@@ -1,9 +1,9 @@
-import os, sys, json, subprocess, logging, argparse
+import os, sys, json, argparse
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from docx import Document
 from multiprocessing import Pool
-from lib.jieba import Tokenizer as JiebaTokenizer, setLogLevel
+from preprocess.lib.jieba import Tokenizer as JiebaTokenizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_cpus", type=int, default=32)

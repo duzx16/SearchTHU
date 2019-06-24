@@ -2,8 +2,7 @@
   "field_weights": {
     "title": 5.0,
     "content": 0.2,
-    "url": 5.0,
-    "anchor": 30.0,
+    "anchor": 5.0,
     "h1": 1.2,
     "h2": 1.0,
     "h3": 0.8,
