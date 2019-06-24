@@ -22,6 +22,7 @@ They are too large (>20G) and thus not included here, but can be provided upon r
 To preprocess files under the `<dir>` directory, run:
 
 ```
+cd preprocess
 pip install -r requirements.txt
 python DocParser.py <dir>
 ```
