@@ -3,12 +3,10 @@
 ## Requirements
 
 * Python 3.5+
-
-* Java 8
-
+* Java 1.8
 * Node 10+
-
 * Npm 6+
+* Tomcat 9.0.21
 
 ## Deployment Guide
 
@@ -30,6 +28,10 @@ python DocParser.py <dir>
 For each file with path `<path>`, it outputs a processed JSON file `<path>.json`.
 
 ### Backend
+
+Put `out/artifacts/SearchTHU_war/SearchTHU_war.war` at `webapps/` of the Tomcat directory, and then start the Tomcat service.
+
+The API path is http://hostname:port/SearchTHU_war/. See the API details at `doc/api.md`.
 
 ### Frontend
 
